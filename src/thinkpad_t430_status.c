@@ -27,15 +27,26 @@ static const struct gpio_dt_spec power_led =
 static const struct gpio_dt_spec mute_led = GPIO_DT_SPEC_GET(DT_NODELABEL(t430_mute_led), gpios);
 static const struct gpio_dt_spec micmute_led =
     GPIO_DT_SPEC_GET(DT_NODELABEL(t430_micmute_led), gpios);
+static const struct gpio_dt_spec profile_leds[] = {
+    GPIO_DT_SPEC_GET(DT_NODELABEL(t430_profile_1_led), gpios),
+    GPIO_DT_SPEC_GET(DT_NODELABEL(t430_profile_2_led), gpios),
+    GPIO_DT_SPEC_GET(DT_NODELABEL(t430_profile_3_led), gpios),
+};
 
 static struct k_work_delayable status_work;
+static struct k_work_delayable profile_status_work;
 static bool indicators_ready;
 static bool normal_blink_on;
-static bool profile_flash_on;
-static uint8_t profile_flashes_remaining;
+static bool profile_blink_on;
+static int64_t profile_identify_until;
 static int last_profile = -1;
 static bool mute_on;
 static bool micmute_on;
+
+#define PROFILE_IDENTIFY_DURATION_MS 2500
+#define PROFILE_PAIRING_BLINK K_MSEC(150)
+#define PROFILE_DISCONNECTED_ON K_MSEC(120)
+#define PROFILE_DISCONNECTED_OFF K_MSEC(1880)
 
 static void set_led(const struct gpio_dt_spec *led, bool on) {
     int err = gpio_pin_set_dt(led, on ? 1 : 0);
@@ -48,6 +59,20 @@ static void set_led(const struct gpio_dt_spec *led, bool on) {
 static void schedule_status(k_timeout_t delay) {
     if (indicators_ready) {
         k_work_reschedule(&status_work, delay);
+    }
+}
+
+static void schedule_profile_status(k_timeout_t delay) {
+    if (indicators_ready) {
+        k_work_reschedule(&profile_status_work, delay);
+    }
+}
+
+static void set_selected_profile_led(bool on) {
+    int selected = zmk_ble_active_profile_index();
+
+    for (size_t i = 0; i < ARRAY_SIZE(profile_leds); i++) {
+        set_led(&profile_leds[i], on && selected == (int)i);
     }
 }
 
@@ -88,39 +113,64 @@ static void show_normal_status(void) {
 static void status_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
 
-    if (profile_flashes_remaining > 0) {
-        profile_flash_on = !profile_flash_on;
-        set_led(&power_led, profile_flash_on);
+    show_normal_status();
+}
 
-        if (profile_flash_on) {
-            schedule_status(K_MSEC(150));
+static void profile_status_work_handler(struct k_work *work) {
+    ARG_UNUSED(work);
+
+    struct zmk_endpoint_instance endpoint = zmk_endpoints_selected();
+    int64_t now = k_uptime_get();
+
+    if (endpoint.transport == ZMK_TRANSPORT_USB) {
+        if (now < profile_identify_until) {
+            set_selected_profile_led(true);
+            schedule_profile_status(K_MSEC(profile_identify_until - now));
         } else {
-            profile_flashes_remaining--;
-            schedule_status(profile_flashes_remaining > 0 ? K_MSEC(150) : K_MSEC(350));
+            set_selected_profile_led(false);
         }
         return;
     }
 
-    show_normal_status();
+    if (zmk_ble_active_profile_is_connected()) {
+        if (now < profile_identify_until) {
+            set_selected_profile_led(true);
+            schedule_profile_status(K_MSEC(profile_identify_until - now));
+        } else {
+            set_selected_profile_led(false);
+        }
+        return;
+    }
+
+    profile_blink_on = !profile_blink_on;
+    set_selected_profile_led(profile_blink_on);
+
+    if (zmk_ble_active_profile_is_open()) {
+        schedule_profile_status(PROFILE_PAIRING_BLINK);
+    } else {
+        schedule_profile_status(profile_blink_on ? PROFILE_DISCONNECTED_ON
+                                                 : PROFILE_DISCONNECTED_OFF);
+    }
 }
 
-static void refresh_power_status(bool show_profile) {
+static void refresh_power_status(void) {
     if (!indicators_ready) {
         return;
     }
 
-    if (show_profile) {
-        int profile = zmk_ble_active_profile_index();
-
-        if (profile != last_profile) {
-            last_profile = profile;
-            profile_flashes_remaining = profile + 1;
-            profile_flash_on = false;
-        }
-    }
-
     normal_blink_on = false;
     schedule_status(K_NO_WAIT);
+}
+
+static void refresh_profile_status(bool identify_profile) {
+    if (!indicators_ready) {
+        return;
+    }
+
+    profile_blink_on = false;
+    profile_identify_until =
+        identify_profile ? k_uptime_get() + PROFILE_IDENTIFY_DURATION_MS : 0;
+    schedule_profile_status(K_NO_WAIT);
 }
 
 static int t430_status_listener(const zmk_event_t *eh) {
@@ -144,10 +194,19 @@ static int t430_status_listener(const zmk_event_t *eh) {
     }
 
     if (as_zmk_ble_active_profile_changed(eh) != NULL) {
-        refresh_power_status(true);
-    } else if (as_zmk_endpoint_changed(eh) != NULL ||
-               as_zmk_usb_conn_state_changed(eh) != NULL) {
-        refresh_power_status(false);
+        int profile = zmk_ble_active_profile_index();
+        bool profile_changed = profile != last_profile;
+
+        last_profile = profile;
+        refresh_power_status();
+        refresh_profile_status(profile_changed ||
+                               (zmk_endpoints_selected().transport == ZMK_TRANSPORT_BLE &&
+                                zmk_ble_active_profile_is_connected()));
+    } else if (as_zmk_endpoint_changed(eh) != NULL) {
+        refresh_power_status();
+        refresh_profile_status(zmk_endpoints_selected().transport == ZMK_TRANSPORT_BLE);
+    } else if (as_zmk_usb_conn_state_changed(eh) != NULL) {
+        refresh_power_status();
     }
 
     return ZMK_EV_EVENT_BUBBLE;
@@ -160,7 +219,10 @@ ZMK_SUBSCRIPTION(thinkpad_t430_status, zmk_keycode_state_changed);
 ZMK_SUBSCRIPTION(thinkpad_t430_status, zmk_usb_conn_state_changed);
 
 static int thinkpad_t430_status_init(void) {
-    const struct gpio_dt_spec *leds[] = {&power_led, &mute_led, &micmute_led};
+    const struct gpio_dt_spec *leds[] = {
+        &power_led,       &mute_led,        &micmute_led,
+        &profile_leds[0], &profile_leds[1], &profile_leds[2],
+    };
 
     for (size_t i = 0; i < ARRAY_SIZE(leds); i++) {
         if (!gpio_is_ready_dt(leds[i])) {
@@ -176,11 +238,13 @@ static int thinkpad_t430_status_init(void) {
     }
 
     k_work_init_delayable(&status_work, status_work_handler);
+    k_work_init_delayable(&profile_status_work, profile_status_work_handler);
     last_profile = zmk_ble_active_profile_index();
     indicators_ready = true;
-    refresh_power_status(false);
+    refresh_power_status();
+    refresh_profile_status(false);
 
-    LOG_INF("T430 power, mute, and mic-mute indicators initialized");
+    LOG_INF("T430 power, mute, mic-mute, and BLE profile indicators initialized");
     return 0;
 }
 
