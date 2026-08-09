@@ -11,6 +11,11 @@ Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
 - the power-button LED for connection state; and
 - the speaker-mute and microphone-mute LEDs.
 
+Planning the custom Holyiot board? See the
+[production PCB wiring and design plan](docs/production-pcb-wiring.md). The
+production GPIO assignment is intentionally optimized for PCB routing and is
+different from the DK bring-up wiring documented below.
+
 ## Before wiring anything
 
 The nRF52840 is a **3.3 V device and its GPIOs are not 5 V tolerant**. Do not
