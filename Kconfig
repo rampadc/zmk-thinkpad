@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+
+menuconfig THINKPAD_T430_STATUS
+    bool "ThinkPad T430 indicator LEDs"
+    default y if SHIELD_THINKPAD_T430
+    depends on ZMK_BLE && ZMK_USB
+    help
+      Drives the T430 power-button LED with USB/BLE connection status and
+      mirrors the dedicated speaker/microphone mute buttons to their LEDs.

@@ -1,33 +1,158 @@
 # ThinkPad T430 ZMK firmware
 
-This repository currently contains the TrackPoint bring-up firmware for a
-ThinkPad T430 keyboard connected to a Nordic nRF52840 DK.
+This repository turns a ThinkPad T430 keyboard and TrackPoint into a USB and
+Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
 
-## TrackPoint wiring
+- the complete US QWERTY keyboard matrix, Fn key, power button, and dedicated
+  media buttons;
+- TrackPoint movement and all three TrackPoint buttons;
+- USB and BLE output, with three independently bonded BLE hosts;
+- keyboard backlight control with **Fn+Space**;
+- the power-button LED for connection state; and
+- the speaker-mute and microphone-mute LEDs.
 
-The nRF52840 GPIOs are **not 5 V tolerant**. Connect these signals only through
-a bidirectional, open-collector-compatible level conversion stage and connect
-the TrackPoint and DK grounds together.
+## Before wiring anything
 
-| TrackPoint signal | T430 connector signal | nRF52840 pin | DK header |
+The nRF52840 is a **3.3 V device and its GPIOs are not 5 V tolerant**. Do not
+connect a 5 V keyboard or TrackPoint signal directly to it. Use suitable level
+conversion or driver circuitry and connect the keyboard, converter, and DK
+grounds together.
+
+All passive, active-low inputs on the nRF side are configured to use the
+nRF52840's **internal pull-up resistors**. The firmware does not expect external
+pull-up resistors on any nRF GPIO:
+
+- all eight keyboard `SENSE` inputs;
+- the separate Fn (`-HOTKEY`) and power-button (`-PWRSWITCH`) inputs;
+- all four DK switches; and
+- TrackPoint `DATA` and `CLOCK` on the 3.3 V side.
+
+There is one electrical distinction that firmware cannot remove: PS/2 is an
+open-collector bus. If a BSS138 translator separates a 3.3 V bus from a 5 V
+bus, the nRF's internal pull-up only pulls up the **3.3 V side**. The 5 V side
+must already have its own pull-up, either inside the TrackPoint/adapter or on
+the translator module. Never use that 5 V pull-up on an nRF pin.
+
+## T430 connector wiring
+
+The connector names and pin numbers below refer to `J7` in the T430 schematic.
+Confirm the connector orientation and check continuity before applying power;
+the physical left-to-right order depends on which side of the keyboard cable
+you are viewing.
+
+### Keyboard matrix
+
+The T430 has 16 matrix drive outputs and eight active-low sense inputs. Every
+`SENSE` pin below has its nRF internal pull-up enabled.
+
+| Signal | J7 pin | nRF52840 GPIO | Signal | J7 pin | nRF52840 GPIO |
+| --- | ---: | --- | --- | ---: | --- |
+| `DRV0` | 22 | P0.03 | `SENSE0` | 5 | P1.04 |
+| `DRV1` | 18 | P0.04 | `SENSE1` | 13 | P1.05 |
+| `DRV2` | 14 | P0.17 | `SENSE2` | 9 | P1.06 |
+| `DRV3` | 10 | P0.19 | `SENSE3` | 7 | P1.07 |
+| `DRV4` | 2 | P0.20 | `SENSE4` | 11 | P1.09 |
+| `DRV5` | 4 | P0.21 | `SENSE5` | 3 | P1.10 |
+| `DRV6` | 8 | P0.22 | `SENSE6` | 15 | P1.11 |
+| `DRV7` | 12 | P0.23 | `SENSE7` | 17 | P1.13 |
+| `DRV8` | 6 | P0.28 |  |  |  |
+| `DRV9` | 20 | P0.29 |  |  |  |
+| `DRV10` | 16 | P0.30 |  |  |  |
+| `DRV11` | 24 | P0.31 |  |  |  |
+| `DRV12` | 28 | P1.00 |  |  |  |
+| `DRV13` | 32 | P1.01 |  |  |  |
+| `DRV14` | 26 | P1.02 |  |  |  |
+| `DRV15` | 30 | P1.03 |  |  |  |
+
+P0.17 and P0.19-P0.23 are connected to the DK's onboard QSPI flash. This
+firmware disables QSPI and reuses those pins for the keyboard matrix.
+
+### Separate controls, backlight, and LEDs
+
+| T430 signal | J7 pin | nRF52840 GPIO | Direction and behavior |
+| --- | ---: | --- | --- |
+| `-HOTKEY` (Fn) | 1 | P1.14 | Input, active low, internal pull-up |
+| `-PWRSWITCH` | 19 | P1.15 | Input, active low, internal pull-up |
+| `KBD_BL_PWM` | 25 | P1.12 | 1 kHz PWM output |
+| `-LEDPWR` | 23 | P0.13 | Output, active low |
+| `-LED_MUTE` | 33 | P0.14 | Output, active low |
+| `-LEDMICMUTE` | 36 | P0.15 | Output, active low |
+
+The LED and backlight GPIOs are logic/control outputs, not power supplies. Use
+appropriate transistor or level-shifting circuitry for the T430's original
+loads, and do not allow their keyboard-side voltage onto an nRF GPIO.
+
+During DK bring-up, P0.13-P0.15 also drive onboard LED1-LED3, so connection,
+mute, and mic-mute state can be tested before the keyboard LEDs are connected.
+
+### TrackPoint
+
+| TrackPoint signal | J7 pin | nRF52840 GPIO | DK header |
+| --- | ---: | --- | --- |
+| `TP4DATA` | 37 | P0.26 | D14 / SDA |
+| `TP4CLK` | 39 | P0.27 | D15 / SCL |
+| `TP4_RESET` | 40 | P1.08 | D7 |
+
+`DATA` and `CLOCK` use internal pull-ups on the nRF side. Power the TrackPoint
+from the correct translated/external supply; do not power it from an nRF GPIO.
+
+## Keys and controls
+
+The base layer is a normal US QWERTY T430 layout. The separate power button
+toggles between USB and BLE output. The four DK buttons remain available as
+recovery controls even after the complete keyboard is connected.
+
+| Control | Action |
+| --- | --- |
+| Power button | Toggle USB/BLE output |
+| Fn+Power | Advance to the next BLE host |
+| Fn+1 / Fn+2 / Fn+3 | Select and connect to BLE host 1 / 2 / 3 |
+| Fn+4 | Select USB output |
+| Fn+Delete | Clear only the selected BLE profile and advertise for pairing |
+| Fn+Space | Cycle keyboard backlight through off, 50%, and 100% |
+| SW1 | Select USB output |
+| SW2 | Select BLE output |
+| SW3 | Advance to the next BLE host |
+| SW4 | Clear the selected BLE profile and advertise for pairing |
+
+The original T430-style Fn shortcuts are also present:
+
+| Shortcut | Action | Shortcut | Action |
 | --- | --- | --- | --- |
-| DATA | `TP4DATA` | P0.26 | D14 / SDA |
-| CLOCK | `TP4CLK` | P0.27 | D15 / SCL |
-| RESET | `TP4_RESET` | P1.08 | D7 |
+| Fn+F3 | Lock | Fn+F8 | Brightness down |
+| Fn+F4 | Sleep | Fn+F9 | Brightness up |
+| Fn+F5 | Wireless control | Fn+F10 | Previous track |
+| Fn+F6 | System control panel | Fn+F11 | Play/pause |
+| Fn+F7 | Display switch (Win+P) | Fn+F12 | Next track |
+| Fn+B | Break | Fn+P | Pause |
+| Fn+S | SysRq | Fn+K | Scroll Lock |
 
-Power the TrackPoint from the appropriate external 5 V supply; do not power it
-from an nRF52840 GPIO.
+Media and system-key behavior depends on host OS support. The mute and
+microphone-mute LEDs currently toggle when their matching physical T430 button
+is pressed; they do not yet receive mute-state changes made elsewhere on the
+host.
+
+## Power-button connection LED
+
+The LED inside the power button shows the selected output's state:
+
+| Pattern | Meaning |
+| --- | --- |
+| Solid | Selected USB HID is ready, or selected BLE host is connected |
+| Fast blink | Selected BLE profile is empty and advertising for pairing |
+| Short pulse every second | Bonded BLE host is disconnected/reconnecting |
+| Short pulse every second while USB is selected | USB is not enumerated |
+| One, two, or three flashes | BLE profile 1, 2, or 3 was selected |
 
 ## Build locally
 
-All commands in this guide are run from the repository root—the directory named
-`zmk-config-t430`. The commands that need to work inside `.zmk` use a temporary
-subshell, so your terminal stays at the repository root.
+Run every command below from the repository root: the directory named
+`zmk-config-t430`. The blocks which need `.zmk` use a temporary subshell, so
+your terminal returns to the repository root automatically.
 
-> **Copy only the text inside each command box.** Do not type or paste the
-> three backtick characters shown around a command box. If the terminal displays
-> `bquote>`, press **Control-C** once to cancel, then paste the command again
-> without the backticks.
+> Copy only the text inside each command box. Do not paste the three backtick
+> characters. If the terminal shows `bquote>`, press **Control-C** once and
+> paste the command again without the backticks.
 
 If your prompt currently says `.zmk`, return to the repository root first:
 
@@ -35,7 +160,7 @@ If your prompt currently says `.zmk`, return to the repository root first:
 cd ..
 ```
 
-You can confirm that you are in the right place with:
+Confirm the current directory:
 
 ```sh
 pwd
@@ -45,7 +170,7 @@ The last part should be `/zmk-config-t430`.
 
 ### 1. Install the tools
 
-On macOS with Homebrew, the required command-line tools can be installed with:
+On macOS with Homebrew:
 
 ```sh
 brew install git python cmake ninja west arm-none-eabi-gcc
@@ -53,7 +178,7 @@ brew install git python cmake ninja west arm-none-eabi-gcc
 
 ### 2. Set up ZMK (first time only)
 
-Run this whole block from `zmk-config-t430`:
+Run this complete block from `zmk-config-t430`:
 
 ```sh
 mkdir -p .zmk/config
@@ -75,14 +200,12 @@ python3 -m venv .zmk/.venv
 )
 ```
 
-The `if` check makes this safe when `.zmk` has already been initialized. The
-messages `File exists` and `already initialized` mean you previously completed
-that part; they do not mean the firmware is broken.
+The `if` check makes this safe if `.zmk` is already initialized. `File exists`
+or `already initialized` usually means that step was completed previously.
 
 ### 3. Build the firmware
 
-Run this block from `zmk-config-t430`. It uses the Homebrew ARM toolchain and
-performs a clean build:
+Run this complete block from `zmk-config-t430`:
 
 ```sh
 (
@@ -104,23 +227,22 @@ The finished firmware is:
 .zmk/build/thinkpad_t430/zephyr/zmk.hex
 ```
 
-Use the same build block again after changing the firmware. You do not need to
-repeat the setup block.
+Use the same build block again after editing the firmware. The setup block is
+only needed once.
 
 ## Flash and view logs
 
-The easiest flashing method does not require another command-line tool:
+The simplest flashing method is drag-and-drop through the DK debugger:
 
 1. Connect the DK's interface/debug USB port to the Mac.
-2. Wait for a drive named `JLINK` to appear.
+2. Wait for a drive named `JLINK`.
 3. From `zmk-config-t430`, run:
 
 ```sh
 cp .zmk/build/thinkpad_t430/zephyr/zmk.hex /Volumes/JLINK/
 ```
 
-The drive may disconnect and reconnect while the DK programs itself. That is
-normal.
+The drive can disconnect and reconnect while programming. That is normal.
 
 If SEGGER J-Link is installed, this root-level command is an alternative:
 
@@ -132,48 +254,41 @@ If SEGGER J-Link is installed, this root-level command is an alternative:
 )
 ```
 
-UART0 logs are emitted through the interface/debug USB virtual serial port at
-115200 baud. For example, install `tio` with `brew install tio`, then run:
+UART0 logs use the interface/debug USB virtual serial port at 115200 baud. For
+example, install `tio` with `brew install tio`, then run:
 
 ```sh
 ls /dev/cu.usbmodem*
 tio -b 115200 /dev/cu.usbmodemXXXX
 ```
 
-Replace the example device with the one reported by `ls`. A successful startup
-should identify the PS/2 device and finish with data reporting enabled rather
-than repeated clock or data timeouts.
+Replace the example path with the device reported by `ls`. Connect the DK's
+second, nRF USB port to the host when testing USB keyboard/mouse output.
 
-Connect the DK's second, nRF USB port to the host when testing USB HID output.
+Enabling new HID features changes the BLE descriptor. Remove any older bond
+for this keyboard from the host, clear the matching keyboard profile with
+Fn+Delete or SW4, and pair it again before testing BLE.
 
-## DK controls
+## Hardware and keymap references
 
-| DK control | Action |
-| --- | --- |
-| SW1 | Select USB output |
-| SW2 | Select BLE output |
-| SW3 | Select the next of three BLE profiles |
-| SW4 | Clear the current BLE profile and advertise for pairing |
+- The connector signal names and pin numbers come from the
+  [T430 motherboard schematic](https://indiarefix.in/download/file.php?id=9313),
+  at keyboard connector `J7`.
+- The matrix positions are based on the
+  [ThinkPad EC xx30 matrix documentation](https://github.com/hamishcoleman/thinkpad-ec/blob/master/docs/table_matrix.txt)
+  and its [X230 matrix source](https://github.com/hamishcoleman/thinkpad-ec/blob/master/asm/ec_key_matrix_x230.mac),
+  which applies to the shared xx30 keyboard generation.
+- The Fn behavior follows the
+  [official Lenovo ThinkPad T430/T430i user guide](https://download.lenovo.com/pccbbs/mobiles_pdf/t430_t430i_ug_en.pdf).
 
-The GitHub Actions build artifact is named `thinkpad_t430_trackpoint`. Extract
-its `.hex` file and flash it using either method above.
-
-For the first functional test, press SW1 and verify movement plus all three
-buttons over USB. Press SW2 for BLE, use SW3 to choose a profile, and press SW4
-to clear that profile before pairing it with a host. Repeat for all three
-profiles.
-
-Enabling pointing changes the BLE HID descriptor. Remove any older bond for
-this keyboard from the host, clear the matching keyboard profile, and pair it
-again before testing BLE pointing.
-
-## Attribution
+## TrackPoint driver attribution
 
 TrackPoint support is provided by the
 [`kb_zmk_ps2_mouse_trackpoint_driver`](https://github.com/infused-kim/kb_zmk_ps2_mouse_trackpoint_driver)
 module developed by [Kim Streich (`infused-kim`)](https://github.com/infused-kim)
 and other ZMK contributors. This configuration also incorporates the Zephyr
-compatibility work maintained in [badjeff's fork](https://github.com/badjeff/kb_zmk_ps2_mouse_trackpoint_driver).
+compatibility work maintained in
+[badjeff's fork](https://github.com/badjeff/kb_zmk_ps2_mouse_trackpoint_driver).
 
 For reproducible builds, West fetches
 [`rampadc/kb_zmk_ps2_mouse_trackpoint_driver`](https://github.com/rampadc/kb_zmk_ps2_mouse_trackpoint_driver),

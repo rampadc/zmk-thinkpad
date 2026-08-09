@@ -1,16 +1,130 @@
 #include <behaviors.dtsi>
+#include <dt-bindings/zmk/backlight.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/hid_usage.h>
+#include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
 
+#define BASE 0
+#define FN 1
+
+/* HID usages missing convenient aliases in ZMK v0.3. */
+#define C_MIC_MUTE                                                                                \
+    ZMK_HID_USAGE(HID_USAGE_CONSUMER, HID_USAGE_CONSUMER_START_OR_STOP_MICROPHONE_CAPTURE)
+#define C_WIRELESS                                                                                \
+    ZMK_HID_USAGE(HID_USAGE_CONSUMER, HID_USAGE_CONSUMER_AL_WIRELESS_STATUS)
+
 / {
+    macros {
+        /* Selecting a host also selects BLE, like a Logitech Easy-Switch key. */
+        ble_profile_1: ble_profile_1 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&out OUT_BLE>, <&bt BT_SEL 0>;
+        };
+
+        ble_profile_2: ble_profile_2 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&out OUT_BLE>, <&bt BT_SEL 1>;
+        };
+
+        ble_profile_3: ble_profile_3 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&out OUT_BLE>, <&bt BT_SEL 2>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
-        default_layer {
-            // DK SW1       DK SW2       DK SW3      DK SW4
-            // USB output   BLE output   next host   clear current host
+        base_layer {
+            display-name = "QWERTY";
             bindings = <
-                &out OUT_USB  &out OUT_BLE  &bt BT_NXT  &bt BT_CLR
+                /* Power; dedicated mute, volume, mic-mute, ThinkVantage. */
+                &out OUT_TOG
+                &kp C_MUTE  &kp C_VOL_DN  &kp C_VOL_UP  &kp C_MIC_MUTE  &kp C_AL_OEM_FEATURES
+
+                /* Esc, F1-F12, then Insert/Delete/Home/End/Page Up/Page Down. */
+                &kp ESC
+                &kp F1  &kp F2  &kp F3  &kp F4  &kp F5  &kp F6
+                &kp F7  &kp F8  &kp F9  &kp F10 &kp F11 &kp F12
+                &kp INS &kp DEL &kp HOME &kp END &kp PG_UP &kp PG_DN
+
+                /* Number row. */
+                &kp GRAVE
+                &kp N1 &kp N2 &kp N3 &kp N4 &kp N5 &kp N6 &kp N7
+                &kp N8 &kp N9 &kp N0 &kp MINUS &kp EQUAL &kp BSPC
+
+                /* QWERTY row. */
+                &kp TAB
+                &kp Q &kp W &kp E &kp R &kp T &kp Y &kp U
+                &kp I &kp O &kp P &kp LBKT &kp RBKT &kp BSLH
+
+                /* Home row. */
+                &kp CAPS
+                &kp A &kp S &kp D &kp F &kp G &kp H &kp J
+                &kp K &kp L &kp SEMI &kp SQT &kp RET
+
+                /* Shift row. */
+                &kp LSHFT
+                &kp Z &kp X &kp C &kp V &kp B &kp N &kp M
+                &kp COMMA &kp DOT &kp FSLH &kp RSHFT
+
+                /* Bottom row and cursor cluster. */
+                &mo FN &kp LCTRL &kp LGUI &kp LALT
+                &kp SPACE &kp RALT &kp PSCRN &kp RCTRL
+                &kp LEFT &kp UP &kp DOWN &kp RIGHT
+
+                /* DK SW1: USB, SW2: BLE, SW3: next host, SW4: clear host. */
+                &out OUT_USB &out OUT_BLE &bt BT_NXT &bt BT_CLR
+            >;
+        };
+
+        fn_layer {
+            display-name = "Fn";
+            bindings = <
+                /* Fn+Power advances hosts; audio buttons keep base behavior. */
+                &bt BT_NXT
+                &trans &trans &trans &trans &trans
+
+                /* Original T430 Fn functions from Lenovo's user guide. */
+                &trans
+                &trans &trans &kp C_AL_LOCK &kp C_SLEEP
+                &kp C_WIRELESS &kp C_AL_CONTROL_PANEL &kp LG(P)
+                &kp C_BRI_DN &kp C_BRI_UP &kp C_PREV &kp C_PP &kp C_NEXT
+
+                /* Fn+Delete clears only the selected BLE profile. */
+                &trans &bt BT_CLR &trans &trans &trans &trans
+
+                /* Fn+1/2/3 are BLE hosts; Fn+4 is the explicit USB target. */
+                &trans
+                &ble_profile_1 &ble_profile_2 &ble_profile_3 &out OUT_USB
+                &trans &trans &trans &trans &trans &trans &trans &trans &trans
+
+                /* Fn+P=Pause. */
+                &trans
+                &trans &trans &trans &trans &trans &trans &trans
+                &trans &trans &kp PAUSE_BREAK &trans &trans &trans
+
+                /* Fn+S=SysRq and Fn+K=Scroll Lock. */
+                &trans
+                &trans &kp LA(PSCRN) &trans &trans &trans &trans &trans
+                &kp SLCK &trans &trans &trans &trans
+
+                /* Fn+B=Break (Ctrl+Pause). */
+                &trans
+                &trans &trans &trans &trans &kp LC(PAUSE_BREAK)
+                &trans &trans &trans &trans &trans &trans
+
+                /* Fn+Space cycles off, 50%, and 100%; other bottom keys pass through. */
+                &trans &trans &trans &trans
+                &bl BL_CYCLE &trans &trans &trans
+                &trans &trans &trans &trans
+
+                /* DK recovery controls remain active on every layer. */
+                &trans &trans &trans &trans
             >;
         };
     };
