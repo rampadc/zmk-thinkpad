@@ -10,12 +10,15 @@ Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
 - automatic wake reporting over the selected USB or BLE transport;
 - keyboard backlight control with **Fn+Space**;
 - the power-button LED for connection state; and
-- the speaker-mute and microphone-mute LEDs.
+- the speaker-mute and microphone-mute LEDs; and
+- three low-power BLE-profile indicator LEDs.
 
 Planning the custom Holyiot board? See the
 [production PCB wiring and design plan](docs/production-pcb-wiring.md). The
 production GPIO assignment is intentionally optimized for PCB routing and is
-different from the DK bring-up wiring documented below.
+different from the DK bring-up wiring documented below. A separate
+[preliminary BOM](docs/preliminary-bom.md) lists candidate components and
+current sourcing assumptions.
 
 ## Before wiring anything
 
@@ -91,6 +94,23 @@ loads, and do not allow their keyboard-side voltage onto an nRF GPIO.
 During DK bring-up, P0.13-P0.15 also drive onboard LED1-LED3, so connection,
 mute, and mic-mute state can be tested before the keyboard LEDs are connected.
 
+### BLE-profile LEDs on the DK
+
+The production PCB will have three adjacent LEDs labeled `1`, `2`, and `3`.
+The DK build provides the same firmware behavior using LED4 plus two external
+LEDs:
+
+| Profile | DK GPIO | Connection |
+| ---: | --- | --- |
+| 1 | P0.16 | DK onboard LED4 |
+| 2 | P0.02 | `3.3 V -> 4.7 kΩ -> LED anode`; LED cathode to P0.02 |
+| 3 | P0.05 | `3.3 V -> 4.7 kΩ -> LED anode`; LED cathode to P0.05 |
+
+The two external LEDs are active-low: the GPIO sinks approximately 0.2-0.3 mA
+when illuminated. Use green, amber, or red LEDs rather than blue or white.
+P0.05 is normally the DK virtual-serial RTS signal; this shield releases RTS
+while retaining UART TX/RX logging through the J-Link serial port.
+
 ### TrackPoint
 
 | TrackPoint signal | J7 pin | nRF52840 GPIO | DK header |
@@ -148,7 +168,21 @@ The LED inside the power button shows the selected output's state:
 | Fast blink | Selected BLE profile is empty and advertising for pairing |
 | Short pulse every second | Bonded BLE host is disconnected/reconnecting |
 | Short pulse every second while USB is selected | USB is not enumerated |
-| One, two, or three flashes | BLE profile 1, 2, or 3 was selected |
+
+## BLE-profile indicator LEDs
+
+Only the currently selected profile LED is driven. The other two remain off:
+
+| Pattern | Meaning |
+| --- | --- |
+| Fast blink | Selected profile is empty and advertising for pairing |
+| Short pulse every two seconds | Selected profile is bonded but disconnected |
+| Solid for 2.5 seconds | Profile was selected or has just connected |
+| Off after the solid indication | Selected profile remains connected, or USB is selected |
+
+The power-button LED continues to show the overall selected transport and
+connection state. The separate profile LEDs answer which BLE slot is active
+without leaving another LED continuously lit.
 
 ## Build locally
 
