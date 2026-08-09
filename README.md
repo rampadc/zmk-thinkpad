@@ -7,6 +7,7 @@ Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
   media buttons;
 - TrackPoint movement and all three TrackPoint buttons;
 - USB and BLE output, with three independently bonded BLE hosts;
+- automatic wake reporting over the selected USB or BLE transport;
 - keyboard backlight control with **Fn+Space**;
 - the power-button LED for connection state; and
 - the speaker-mute and microphone-mute LEDs.
