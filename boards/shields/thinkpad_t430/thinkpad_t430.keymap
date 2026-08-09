@@ -1,0 +1,17 @@
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/outputs.h>
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            // DK SW1       DK SW2       DK SW3      DK SW4
+            // USB output   BLE output   next host   clear current host
+            bindings = <
+                &out OUT_USB  &out OUT_BLE  &bt BT_NXT  &bt BT_CLR
+            >;
+        };
+    };
+};

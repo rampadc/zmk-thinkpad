@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT
+
+config SHIELD_THINKPAD_T430
+    def_bool $(shields_list_contains,thinkpad_t430)

@@ -4,11 +4,14 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    # Additional modules containing boards/shields/custom code can be listed here as well
-    # See https://docs.zephyrproject.org/3.2.0/develop/west/manifest.html#projects
+    - name: rampadc
+      url-base: https://github.com/rampadc
   projects:
     - name: zmk
       remote: zmkfirmware
       import: app/west.yml
+    - name: kb_zmk_ps2_mouse_trackpoint_driver
+      remote: rampadc
+      revision: 7ab7846a95b233c3ada0e0605b972f36353e7bc4
   self:
     path: config

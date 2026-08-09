@@ -1,0 +1,9 @@
+file_format: "1"
+id: thinkpad_t430
+name: ThinkPad T430 TrackPoint Bring-Up
+type: shield
+url: https://github.com/rampadc/zmk-config-t430
+requires: [arduino_uno]
+features:
+  - keys
+  - pointer
