@@ -53,7 +53,7 @@ The nRF52840 GPIO domain is 3.0-3.3 V and is not 5 V tolerant.
 | T430 J7 pins 29 and 31 | 5 V | Keyboard backlight supply |
 | T430 J7 pin 38 | 5 V | TrackPoint supply |
 | T430 J7 pins 34 and 41-44 | Ground | Join to one solid PCB ground system |
-| `KBD_BL_PWM` | 3.3 V logic | The load it controls is powered from 5 V |
+| `KBD_BL_PWM` | 3.3 V logic | Original EC drives it directly; never translate it to 5 V |
 | TrackPoint DATA/CLOCK/RESET | 5 V open-collector side | Requires translation/isolation |
 
 The keyboard matrix, Fn key, and power button are passive switch contacts. They
@@ -122,7 +122,7 @@ replace the current DK assignment in a future Holyiot-specific devicetree.
 | `DRV0` | 22 | 28 | P1.03 | Matrix output |
 | `-LEDPWR` | 23 | 29 | P1.01 | Drives an external low-side MOSFET |
 | `DRV11` | 24 | 30 | P1.02 | Matrix output |
-| `KBD_BL_PWM` | 25 | 33 | P1.04 | 1 kHz, 3.3 V PWM output |
+| `KBD_BL_PWM` | 25 | 33 | P1.04 | 1 kHz, 3.3 V PWM through 1 kΩ; 100 kΩ pull-down at J7 |
 | `DRV14` | 26 | 34 | P1.06 | Matrix output |
 | `DRV12` | 28 | 47 | P1.07 | Matrix output |
 | `DRV15` | 30 | 48 | P1.05 | Matrix output |
@@ -250,13 +250,43 @@ active-low direct-drive semantics.
 
 ## Backlight
 
+The original T430 motherboard separates backlight power from its control
+signal. On schematic sheet 62, the 3.3 V MEC1619 embedded controller drives
+`KBD_BL_PWM` directly from `GPIO153/LED2`. Sheet 63 routes that net directly to
+J7 pin 25 with no level shifter. The 5 V backlight supply reaches J7 separately
+on pins 29 and 31.
+
+Use this production circuit:
+
+```text
+Holyiot P1.04 ── 1 kΩ ──┬── J7 pin 25 KBD_BL_PWM
+                         │
+                       100 kΩ
+                         │
+                        GND
+
+protected 5 V rail ───────── J7 pins 29 and 31
+```
+
 - Supply 5 V to both J7 pins 29 and 31 with suitably wide traces.
-- Connect J7 pin 25 `KBD_BL_PWM` directly to the 3.3 V PWM GPIO P1.04.
-- Do not put a BSS138 in the PWM path.
+- Drive J7 pin 25 only with 0-3.3 V PWM from P1.04.
+- Fit the 1 kΩ series resistor to limit fault/backfeed current and reduce edge
+  ringing. It is not a voltage divider or level shifter.
+- Fit the 100 kΩ pull-down on the J7 side of the series resistor so the
+  backlight remains off while the nRF GPIO is high-impedance during boot.
+- Do not put a BSS138 or a pull-up to 5 V in the PWM path. Translating the PWM
+  high level to 5 V would exceed the level used by the original motherboard.
 - Place local bulk and high-frequency decoupling near J7. Start with 22 µF plus
   100 nF on the 5 V backlight rail and adjust after measuring inrush/noise.
 - The known T430 assembly makes `-KBD_BL_DTCT` on J7 pin 21 unnecessary; leave
   it unconnected unless automatic keyboard-type detection is added later.
+
+Before connecting P1.04 during first bring-up, power the keyboard's 3.3 V and
+5 V rails with J7 pin 25 disconnected and measure pin 25 relative to ground.
+It must not rise toward 5 V. This verifies that the particular keyboard,
+including an aftermarket replacement, does not contain an unexpected 5 V
+pull-up. Then connect the PWM through the 1 kΩ resistor and confirm that its
+high level remains at or below the Holyiot supply.
 
 ## BSS138 quantity and supporting resistors
 
@@ -275,7 +305,8 @@ Related resistor count:
 | ---: | ---: | --- |
 | 4.7 kΩ | 2 | TrackPoint DATA/CLOCK 5 V pull-ups |
 | 10 kΩ | 1 | TrackPoint RESET 5 V pull-up |
-| 100 kΩ | 4 | RESET and three LED MOSFET gate pull-downs |
+| 1 kΩ | 1 | `KBD_BL_PWM` series protection |
+| 100 kΩ | 5 | RESET/LED MOSFET gates and `KBD_BL_PWM` boot-state pull-down |
 | 220 Ω | 1 | Power LED current limiting |
 | 3.9 kΩ | 2 | Mute and microphone-mute LED current limiting |
 
@@ -508,6 +539,10 @@ guaranteed recovery path.
 - [ ] TrackPoint low side relies on internal pull-ups; high side has 4.7 kΩ.
 - [ ] Six BSS138 footprints fitted with correct source/drain orientation.
 - [ ] LED current-limit and MOSFET gate pull-down resistors fitted.
+- [ ] `KBD_BL_PWM` is a 3.3 V direct signal with 1 kΩ series protection and a
+      100 kΩ pull-down; it has no BSS138 or 5 V pull-up.
+- [ ] J7 pin 25 was checked for an unexpected 5 V pull-up before connection to
+      the Holyiot.
 - [ ] USB CC resistors, ESD protection, and VBUS protection included.
 - [ ] SWDIO, SWDCLK, reset, target VDD, and ground reach the TC2050 footprint.
 - [ ] TC2050 pad 3 is grounded so DK P19 selects the external target.
