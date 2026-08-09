@@ -41,6 +41,7 @@
         sampling-rate = <100>;
         tp-sensitivity = <128>;
         tp-neg-inertia = <6>;
+        tp-y-invert;
     };
 
     trackpoint_listener: trackpoint_listener {
