@@ -1,176 +1,246 @@
-# Preliminary production PCB BOM
+# Preliminary LCSC / home-assembly BOM
 
-This is a one-board preliminary BOM for the Holyiot 18010 V1.0 T430 keyboard
-controller described in [production-pcb-wiring.md](production-pcb-wiring.md).
-It is intended for schematic capture and early purchasing, not yet as a
-JLCPCB assembly upload.
+This is the one-board purchasing and schematic-capture BOM for the Holyiot
+18010 V1.0 T430 controller in
+[preliminary-pcb-wiring.md](preliminary-pcb-wiring.md). Revision A is intended
+for LCSC cut-tape purchasing and assembly at home with an iron, hot air, or a
+small hot plate. It deliberately uses commodity parts seen in inexpensive
+Asian modules and Feather-class boards, but does not copy their optimistic
+power ratings or omit protection needed by a finished keyboard.
 
-> **Stock snapshot:** 9 August 2026. LCSC stock and pricing change frequently.
-> Recheck every LCSC number, manufacturer datasheet, package, pinout, and stock
-> level before ordering or assigning a PCB footprint.
+Stock and prices were checked on **2026-08-10**. LCSC stock is not a design
+guarantee: re-check the MPN, package, data sheet, lifecycle, and stock before
+ordering. An LCSC number identifies the suggested source, not an electrical
+substitute class.
 
-## Assumptions
+## Design choices
 
-- One Holyiot 18010 V1.0 module per board.
-- One-cell protected Li-ion/LiPo battery for wireless use.
-- USB-C provides USB 2.0 data and 5 V input; no USB Power Delivery negotiation.
-- Revision A boots in the BQ24074 USB100 input mode and permits firmware to
-  select USB500 after enumeration. Battery charging is set to approximately
-  200 mA; a protected battery must permit that charge rate.
-- Revision A uses one external power-stage inductor: a 3.0 V LDO supplies the
-  Holyiot/keyboard logic, and a TPS61023 boost supplies the legacy 5 V loads.
-- Measured TrackPoint consumption is 5.94 mA idle, 6.47 mA during movement,
-  and 37.1 mA peak at 5 V. Revision A retains a 50 mA peak allowance.
-- The unmeasured backlight is allocated 500 mA at 5 V. Its load switch and
-  replaceable passives allow later tuning without changing the PCB.
-- The T430 keyboard and TrackPoint use one 40-contact-plus-ground JAE keyboard
-  connector assembly.
-- The PCB uses 0603 imperial resistors and high-frequency capacitors. Larger
-  capacitors, fuses, and inductors use 0805, 1206, or larger packages.
-- DATA and CLOCK use discrete BSS138 level translators on the production PCB.
-  The SparkFun breakout is only for the bench prototype.
-- Quantities headed **Fit** are per PCB. **Buy** is a sensible quantity for a
-  small hand-built prototype run, not a production reel quantity.
+- Buy components on cut tape; there are no charger or boost daughter boards.
+- Use 0603 imperial as the minimum passive size. Use 0805 for removable links
+  and 1206 for power ceramics and the polyfuse.
+- Use E12 values first and E24 only when E12 gives a materially worse result.
+- Combine repeated equal-value resistors in isolated `0603x4`, eight-terminal
+  arrays. Keep USB-C CC resistors, feedback dividers, timing/current-setting
+  resistors, and measurement links discrete so they are easy to inspect and
+  change.
+- `ETA6002` provides a switching charger and genuine dynamic power path in a
+  hand-solderable ESOP-8 package. This is preferable to the cheap `TP4056`
+  topology used on many marketplace boards, which has no separate system
+  output.
+- `LP6252B6F` provides the 5 V rail. It is an inexpensive Asian synchronous
+  boost converter with a 2.7 A typical switch-current limit, soft start, and
+  output disconnect in shutdown. Its advertised current is switch current,
+  not guaranteed 5 V output current; this design must pass a 600 mA
+  thermal/load test at minimum battery voltage.
+- `ME6211C30` provides the 3.0 V logic rail. It is a high-volume Asian
+  SOT-23-5 alternative to the TLV75530 with the same useful 500 mA/enable
+  feature set at much lower cut-tape cost. The familiar Feather-era
+  `AP2112K`/`MCP73831` combination is evidence of broad availability, but an
+  MCP73831 charger is not suitable here because it lacks load sharing.
+- The keyboard assembly already contains its backlight LEDs and drive
+  circuitry. A `YJL3401A` P-channel MOSFET plus one BSS138 switches its 5 V
+  supply; no dedicated LED-driver or load-switch IC is required.
+- `SY6280AAC` limits USB VBUS current before the ETA6002. This is necessary
+  because ETA6002 has no externally programmable USB input limit.
 
-## Parts that can be selected now
+The ETA6002 has an exposed ground pad. Extend its ground landing beyond the
+body and include a large plated via so it can be soldered or touched up from
+the back. Paste and hot air/hot plate remain easiest, but unlike a QFN its eight
+signal leads are directly visible and accessible to an iron.
 
-### Modules, connectors, protection, and switches
+## Value policy
 
-| Ref. | Fit | Buy | Description | Candidate / LCSC | Package | Status and notes |
-| --- | ---: | ---: | --- | --- | --- | --- |
-| MOD1 | 1 | 2 | nRF52840 BLE module | Holyiot 18010 V1.0 | Module | User-supplied; verify purchased pad numbering against the 18010-A top-view manual |
-| J1 | 1 | 5 | USB-C receptacle, USB 2.0, 16 contact | [TYPE-C-31-M-12 / C165948](https://www.lcsc.com/product-detail/C165948.html) | SMD + shell stakes | Widely stocked candidate; use its exact recommended footprint |
-| J2 | 1 | 3-5 | ThinkPad keyboard receptacle | JAE `AA01B-S040VA1-R3000` or verified compatible clone | 0.5 mm, 40 contact | Not an LCSC commodity part; likely donor, AliExpress, or specialist sourcing. Do not substitute AA01A without mechanical testing |
-| Q1-Q6 | 6 | 20 | N-channel MOSFET for TrackPoint translation/reset and LED sinks | [onsemi BSS138 / C52895](https://www.lcsc.com/product-detail/C52895.html) | SOT-23 | Six fitted; check source/drain orientation against the selected symbol and footprint |
-| D1 | 1 | 5 | USB D+/D- ESD protector | [ST USBLC6-2SC6 / C7519](https://www.lcsc.com/product-detail/C7519.html) | SOT-23-6 | Place directly beside J1 with a short ground return |
-| D2 | 1 | 20 | USB VBUS ESD/TVS protection | [ESD5Z5V0 / C85708](https://www.lcsc.com/product-detail/C85708.html) | SOD-523 | Preliminary; coordinate with charger input protection and connector placement |
-| D3-D5 | 3 | 10 | BLE-profile indicator, emerald green | [ROHM CSL0901PT1C / C6490365](https://www.lcsc.com/product-detail/C6490365.html) | 0603 | Profiles 1-3; active-low direct GPIO drive, labeled on silkscreen; amber or red may be substituted |
-| F1 | 1 | 10 | USB VBUS resettable fuse, 1 A hold | [TLC-NSMD100 / C261954](https://www.lcsc.com/product-detail/C261954.html) | 1206 | Revision-A value; BQ24074 starts at USB100 and is limited to USB500 after enumeration |
-| SW1 | 1 | 10 | nRF hardware-reset pushbutton | [TS-1088-AR02016 / C720477](https://www.lcsc.com/product-detail/C720477.html) | SMD, 3.2 x 4.2 mm | P0.18/nRESET to ground; substitute mechanically if case access requires side actuation |
-| P1 | 1 footprint | 0 | Tag-Connect programming interface | TC2050-NL target footprint | PCB pads only | No connector is populated on the PCB; add locating holes and pad-1 marking |
+Preferred resistor values are:
 
-The `TC2050-IDC-NL-050-ALL` cable, nRF52840 DK, keyboard, battery, enclosure,
-and USB cable are off-board items and are not included in the fitted count.
+```text
+0, 220, 1k, 3k, 3.9k, 4.7k, 5.1k, 10k, 15k, 56k,
+100k, and 470k ohms
+```
 
-### Fixed resistors
+All are E12 except `5.1k`, which is E24. `5.1k` is the correct nominal USB-C
+sink CC value. The boost divider uses `470k + 56k` in series above the FB node
+and `100k` below it. It gives approximately 5.01 V from the LP6252's nominal
+0.8 V reference; confirm the assembled rail before connecting the keyboard.
+Do not replace it with a trimmer.
 
-Use 0603 imperial, 1%, at least 0.1 W unless the final schematic explicitly
-requires otherwise. Ordering 100 of each common value is usually cheaper and
-more useful than ordering exactly the fitted count.
+Resistors are 0603, 1%, >=0.1 W unless the table says otherwise. Capacitors are
+X7R or X5R; never use Y5V/Z5U. Account for DC-bias derating on 10 uF and 22 uF
+ceramics.
 
-| Ref. group | Fit | Buy | Value | Candidate MPN | LCSC | Purpose |
-| --- | ---: | ---: | ---: | --- | --- | --- |
-| R_4K7 group | 5 | 100 | 4.7 kΩ | `0603WAF4701T5E` | [C23162](https://www.lcsc.com/product-detail/C23162.html) | Two TrackPoint DATA/CLOCK 5 V pull-ups and three BLE-profile LED resistors |
-| R_TP_RESET, R_TS_FIXED | 2 | 100 | 10 kΩ | `0603WAF1002T5E` | [C25804](https://www.lcsc.com/product-detail/C25804.html) | TrackPoint RESET pull-up; default BQ24074 TS fallback when the battery has no NTC |
-| R_CONTROL group | 3 | 100 | 1 kΩ | `0603WAF1001T5E` | [C21190](https://www.lcsc.com/product-detail/C21190.html) | `KBD_BL_PWM`, `BL_5V_EN`, and `CHG_USB500_EN` series protection |
-| R_100K group | 9 | 100 | 100 kΩ | `0603WAF1003T5E` | [C25803](https://www.lcsc.com/product-detail/C25803.html) | RESET/LED gates, PWM/load-switch/charger defaults, TLV75530P enable, TPS61023 feedback bottom |
-| R_LED_PWR | 1 | 100 | 220 Ω | `0603WAF2200T5E` | [C22962](https://www.lcsc.com/product-detail/C22962.html) | Power/connectivity LED current limiting |
-| R_LED_MUTE group | 2 | 100 | 3.9 kΩ | `0603WAF3901T5E` | [C23018](https://www.lcsc.com/product-detail/C23018.html) | Speaker-mute and microphone-mute LED current limiting |
-| R_CC1, R_CC2 | 2 | 100 | 5.1 kΩ | `0603WAF5101T5E` | [C23186](https://www.lcsc.com/product-detail/C23186.html) | USB-C CC1/CC2 pull-downs (`Rd`) |
-| R_ISET | 1 | 100 | 4.42 kΩ | `0603WAF4421T5E` | [C23043](https://www.lcsc.com/product-detail/C23043.html) | BQ24074 approximately 200 mA fast-charge setting |
-| R_ILIM | 1 | 100 | 3.09 kΩ | `0603WAF3091T5E` | [C22992](https://www.lcsc.com/product-detail/C22992.html) | BQ24074 approximately 500 mA resistor-mode limit; retained for a future EN strap configuration |
-| R_ITERM | 1 | 100 | 2.94 kΩ | `0603WAF2941T5E` | [C22909](https://www.lcsc.com/product-detail/C22909.html) | BQ24074 approximately 20 mA termination current |
-| R_TMR | 1 | 100 | 46.4 kΩ | `0603WAF4642T5E` | Verify stock | BQ24074 approximately 6.25-hour safety timer |
-| R_FB_TOP | 1 | 100 | 732 kΩ | 0603, 1%, MPN TBD | Verify stock | TPS61023 5 V feedback top resistor |
-| LNK_TP, LNK_BL, LNK_3V0 | 3 | 20 | 0 Ω | TBD after PCB current/footprint check | TBD | Removable 0805 links for PPK2 branch measurements; provide test pads on both sides |
-| CFG_BQ and BOOST_EN straps | 4 | 20 | 0 Ω | Stocked generic 0603 jumper | TBD | BQ24074 EN1/EN2/CE configuration and default-always-on TPS61023 enable |
+## Core semiconductors and electromechanical parts
 
-The schematic reference designators must be renumbered during capture; the
-logical names such as `R_ISET` and `R_FB_TOP` are more important than the
-temporary `R1`-style numbers in this planning table.
+`Buy` includes useful spares for one board.
 
-Do not add external pull-ups to the 3.0 V sides of the TrackPoint DATA/CLOCK
-lines, the keyboard SENSE lines, Fn, or the power button. Those inputs use the
-nRF52840's internal pull-ups. The 4.7 kΩ resistors above are on the separate
-5 V TrackPoint side and remain necessary.
+| Ref. | Fit | Buy | Suggested part / LCSC | Package | Reason or constraint |
+| --- | ---: | ---: | --- | --- | --- |
+| MOD1 | 1 | 2 | Holyiot 18010 V1.0 | LGA module | User-supplied; verify the 18010-A top-view pad numbering |
+| U1 | 1 | 5 | etasolution `ETA6002E8A`, `C7436031` | ESOP-8-EP | 3 MHz switching charger with dynamic power path; about US$0.52 at qty 1 when checked |
+| U2 | 1 | 10 | MICRONE `ME6211C30M5G-N`, `C403651` | SOT-23-5 | 3.0 V, 500 mA LDO with enable; about 30 uA Iq and <100 mV dropout at 100 mA |
+| U3 | 1 | 5 | LOWPOWER `LP6252B6F`, `C387748` | SOT-23-6 | 1 MHz synchronous boost with soft start and output disconnect; inexpensive but re-check stock before ordering |
+| U4 | 1 | 5 | Silergy `SY6280AAC`, `C55136` | SOT-23-5 | Programmable VBUS current limiter with reverse blocking and output discharge |
+| D1 | 1 | 10 | TECH PUBLIC `USBLC6-2SC6`, `C2827654` | SOT-23-6 | Two-channel 5 V USB 2.0 ESD protection; verify footprint against its drawing |
+| D2 | 1 | 10 | `SMBJ5.0A` is too large; select a low-capacitance 5 V unidirectional TVS | SOD-123 | VBUS surge clamp; choose VRWM >=5 V and low leakage |
+| D3-D5 | 3 | 10 | amber or red high-efficiency LED | 0603 | BLE profile indicators; avoid green/blue/white |
+| Q1-Q7 | 7 | 20 | Yangjie `BSS138`, `C400505` | SOT-23 | Level shifting, LED/reset sinks, and backlight P-MOS gate pull-down |
+| Q8 | 1 | 10 | Yangjie `YJL3401A`, `C393520` | SOT-23 | P-channel high-side switch for the 5 V backlight supply |
+| F1 | 1 | 5 | 1 A hold PTC, >=6 V | 1206 | USB VBUS protection; verify trip curve, not just headline current |
+| L1-L2 | 2 | 5 | shielded 2.2 uH, Isat >=4 A, low DCR | about 4x4 or 5x5 mm | One common SKU for ETA6002 and LP6252; sized for the charger's higher current limit and within LP6252's recommended 1-4.7 uH range |
+| J1 | 1 | 3 | USB-C USB 2.0 16-pin receptacle with through-board shell stakes | hybrid SMD | Signal pins are SMD; shell stakes give needed mechanical strength |
+| J2 | 1 | 3 | JAE `AA01B-S040VA1-R3000` or physically proven T430 mate | SMD | Mate with the real flex before PCB release |
+| J3 | 1 | 3 | battery connector matching the protected cell | SMD | Verify polarity; connector families do not guarantee it |
+| SW1 | 1 | 5 | normally-open side- or top-actuated reset switch | SMD | Select after enclosure check |
+| SW2 | 1 | 3 | latching main power switch, >=1.5 A DC | SMD | Mechanically selected |
+| P1 | 1 footprint | 0 | Tag-Connect TC2050-NL footprint | pads only | No fitted connector |
 
-### Revision-A capacitors
+Do not buy a random “USBLC6” or BSS138 solely by search title. Check the data
+sheet, marking, pinout, and seller/manufacturer. The selected TECH PUBLIC
+USBLC6 has two protected channels, 5 V stand-off, 6 V breakdown, 12 V clamp,
+low leakage, and the same functional SOT-23-6 class as the ST part. Its PCB pin
+mapping must still be checked against its own drawing rather than inferred
+from the shared part name. Asian-brand equivalents are appropriate where the
+ratings are explicit. Keep the exact ETA6002 charger
+MPN until a candidate substitute's power-path and low-current charge behavior
+have been bench-tested. Do not assume every nominal ME6211 or XC6206 clone is
+equivalent; use the listed MICRONE MPN and verify its pinout.
 
-Use X7R or X5R; do not substitute Y5V for power-stage capacitors.
+## Resistor arrays
 
-| Ref. group | Fit now | Buy | Value/rating | Candidate / LCSC | Package | Intended placement |
-| --- | ---: | ---: | --- | --- | --- | --- |
-| C_BYPASS group | 10 | 100 | 100 nF, 50 V, X7R | [Samsung CL10B104KB8NNNC / C1591](https://www.lcsc.com/product-detail/C1591.html) | 0603 | Holyiot, J7, converters, USB protection, and local rail bypass |
-| C_1U group | 4 | 20 | 1 µF, 10 V or higher, X7R | Select stocked 0603/0805 | 0603 or 0805 | BQ24074 `IN`; TPS22918 `VIN`; TLV75530P input and output |
-| C_BQ_BAT | 1 | 20 | 4.7 µF, 10 V, X7R | [CCTC TCC0805X7R475K100FTM / C51912533](https://www.lcsc.com/product-detail/C51912533.html) | 0805 | BQ24074 `BAT` pins |
-| C_10U group | 2 | 20 | 10 µF, 10 V, X5R | [CCTC TCC0805X5R106K100FT / C380331](https://www.lcsc.com/product-detail/C380331.html) | 0805 | BQ24074 `OUT`; TPS61023 input |
-| C_22U group | 4 | 20 | 22 µF, 10 V, X5R | [FH 1206X226M100NT / C108717](https://www.lcsc.com/product-detail/C108717.html) | 1206 | Two TPS61023 outputs; local TrackPoint and switched-backlight bulk |
-| C_BL_CT | 1 | 20 | 10 nF, 25 V or higher, X7R | Select stocked 0603 | 0603 | TPS22918 slew-rate control; roughly 20-30 ms 5 V rise |
+Use isolated four-resistor/eight-terminal arrays only. `0603x4` describes four
+0603 elements in a roughly 1206-size body; it is not a single 0603 resistor.
+Do not substitute a bussed five-pin network.
 
-Check capacitance under DC bias, especially the 10 µF and 22 µF MLCCs. Leave
-room for an additional larger electrolytic or polymer capacitor on the 5 V
-rail if logic-analyzer or oscilloscope testing shows backlight inrush droop.
+| Ref. | Fit | Value | Elements used | Suggested family | Purpose |
+| --- | ---: | ---: | ---: | --- | --- |
+| RA1 | 1 | 4 x 4.7 kOhm | 2/4 | Yageo `YC164-FR-074K7L`, `C700514`; Bourns `C1733626` alternate | TrackPoint DATA/CLOCK 5 V pull-ups |
+| RA2 | 1 | 4 x 4.7 kOhm | 3/4 | same footprint/value as RA1 | BLE profile LED current limiting |
+| RA3 | 1 | 4 x 1 kOhm | 2/4 | `0603x4`, isolated, 1% | Backlight PWM and P-MOS gate-driver GPIO series resistors |
+| RA4-RA5 | 2 | 4 x 100 kOhm | up to 8/8 | `0603x4`, isolated, 1% | MOSFET gates and safe control defaults |
 
-## Revision-A battery and power-stage selection
+Buy the MOQ only after confirming all three values share the exact same
+footprint. Arrays save placements and routing, but unused elements must be
+unconnected at both ends. A 5% array is electrically adequate for pull-ups
+and LEDs if the 1% strip is unavailable; do not relax divider or CC tolerances.
 
-These selections are suitable for fabricating the first PCB. They are not a
-substitute for checking each manufacturer's reference layout and the exact
-footprint before ordering boards.
+## Discrete resistors
 
-| Ref. | Fit | Candidate / LCSC | Package | Revision-A role and population |
-| --- | ---: | --- | --- | --- |
-| U1 | 1 | [TI BQ24074RGTR / C54313](https://www.lcsc.com/product-detail/C54313.html) | QFN-16-EP, 3 x 3 mm | 1-cell charger/power path; GPIO-selectable USB100/500, 200 mA charge, 20 mA termination, 6.25-hour timer |
-| U2 | 1 | [TI TLV75530PDBVR / C507268](https://www.lcsc.com/product-detail/C507268.html) | SOT-23-5 | Fixed 3.0 V, 500 mA LDO for Holyiot and keyboard logic/LEDs; `EN` pulled to input through 100 kΩ |
-| U3 | 1 | [TI TPS61023DRLR / C919459](https://www.lcsc.com/product-detail/C919459.html) | SOT-563 | 5 V boost; 732 kΩ/100 kΩ feedback, 10 µF input, two 22 µF output |
-| U4 | 1 | [TI TPS22918DBVR / C131941](https://www.lcsc.com/product-detail/C131941.html) | SOT-23-6 | Backlight 5 V load switch; 10 nF `CT`, `QOD` initially open, active-high from Holyiot P1.12 |
-| L1 | 1 | [XR XRNR4030-1uH/N / C5289359](https://www.lcsc.com/product-detail/C5289359.html) | Shielded 4 x 4 mm | TPS61023, 1 µH, 4.14 A rated, 5.26 A saturation, 16 mΩ DCR |
-| J3 | 1 | TBD JST-PH-compatible 2- or 3-pin battery connector | Through-hole or large SMD | Match the actual protected battery and optional NTC; never assume connector polarity |
-| SW2 | 1 | TBD latching power switch | Mechanically selected | Shipping/off control; position and actuator depend on the enclosure |
-| LNK_BAT | 1 | Removable high-current link or solder bridge, TBD | PCB feature or suitably rated part | At least 1.5 A path rating, accessible PPK2 pads, and nearby ground test point |
+| Logical ref. | Fit | Buy | Value | Purpose |
+| --- | ---: | ---: | ---: | --- |
+| R_CC1, R_CC2 | 2 | 20 | 5.1 kOhm | USB-C CC sink resistors; individual and directly inspectable |
+| R_TP_RESET | 1 | 20 | 10 kOhm | TrackPoint RESET pull-up to 5 V |
+| R_LED_PWR | 1 | 20 | 220 Ohm | T430 power/connectivity LED |
+| R_LED_MUTE, R_LED_MIC | 2 | 20 | 3.9 kOhm | T430 mute LEDs |
+| R_CHG_ISET | 1 | 10 | 5.1 kOhm | ETA6002 equation `I_BAT = 1000/R_ISET`; nominal about 196 mA |
+| R_NTC_TOP, R_NTC_BOTTOM | 2 optional | 10 | 10 kOhm | 50% VIN fixed NTC fallback; prefer the protected cell's real thermistor network |
+| R_VBUS_ISET | 1 | 10 | 15 kOhm | SY6280 nominal limit about 453 mA from `I_LIM = 6800/R_SET` |
+| R_FB_TOP_A, R_FB_TOP_B | 2 | 10 each | 470 kOhm + 56 kOhm | LP6252 feedback upper leg; series connection gives 526 kOhm |
+| R_FB_BOTTOM | 1 | 10 | 100 kOhm | LP6252 feedback lower leg, as recommended by its data sheet |
+| LNK_TP, LNK_BL, LNK_3V0 | 3 | 10 | 0 Ohm, 0805 | Removable PPK2 branch measurement links |
+| LNK_BAT | 1 | 5 | 0 Ohm, 1206, >=1.5 A | Whole-board battery measurement link |
+| CFG links | as routed | 20 | 0 Ohm, 0603 | Configuration and debug isolation only |
 
-## Deliberately tunable or mechanically unresolved items
+The ETA6002 data sheet specifies 0.5 A at 2 kOhm and gives
+`I_BAT = 1000/R_ISET`; 5.1 kOhm is the nearest E24 choice for approximately
+196 mA. Verify it on the first board because the data sheet does not publish a
+tolerance point this low. Its NTC hot/cold thresholds are 35% and 76.5% of VIN;
+an equal-resistor divider is an in-range diagnostic fallback, not temperature
+protection. Prefer a real cell thermistor. Pulling NTC below 100 mV disables
+NTC monitoring and should only be a marked bring-up option.
 
-Keep footprints or configuration access for:
+ETA6002 does not expose a programmable USB input-current pin despite LCSC's
+generic “input current limiting” description; its internal switch limit is far
+above a USB 2.0 unit load. U4 therefore sits between protected VBUS and U1 IN.
+Tie its active-high EN to VBUS so it cannot float. A 15 kOhm E24 resistor gives
+about 453 mA nominal, deliberately below 500 mA; confirm tolerance and trip
+behavior on the first board. With the backlight active, ETA6002 power-path
+supplement lets the battery cover demand beyond the USB limit.
 
-- BQ24074 EN2/CE straps, EN1 force-high override, and alternate NTC/fixed-10
-  kOhm TS selection; never populate both TS paths at once;
-- an unpopulated TPS22918 `QOD`-to-`BL_5V` resistor and an interchangeable
-  0603 `CT` capacitor;
-- TPS61023 enable selection: default always-on and alternate future GPIO;
-- battery connector, battery fuse/protection arrangement, and optional fuel gauge;
-- any ferrite bead or extra bulk capacitance justified by measured TrackPoint
-  or backlight noise.
+## Capacitors
 
-Use 0603 for these resistors and small capacitors where their electrical
-requirements permit. Use 0805/1206 or larger for high-capacitance MLCCs and
-any component carrying the 5 V load current.
+| Ref. group | Fit | Buy | Value/rating | Size | Placement / note |
+| --- | ---: | ---: | --- | --- | --- |
+| C_BYPASS | 10 | 50 | 100 nF, 25 V, X7R | 0603 | At every local IC/module supply pin |
+| C_LDO_IN, C_LDO_OUT | 2 | 10 | 1 uF, 10 V, X7R | 0603 or 0805 | Immediately beside ME6211; follow MICRONE layout |
+| C_CHG_IN | 1 | 10 | 10 uF, 10 V, X5R/X7R | 1206 | ETA6002 IN-to-PGND bypass |
+| C_CHG_SYS | 1 | 10 | 22 uF, 10 V, X5R | 1206 | ETA6002 SYS output filter beside L1 |
+| C_CHG_BAT | 1 | 10 | 1 uF, 10 V, X7R | 0805 | ETA6002 BATT bypass |
+| C_BOOST_IN | 1 | 10 | 22 uF, 10 V, X5R | 1206 | Beside L2/U3 input loop |
+| C_BOOST_OUT1-2 | 2 | 10 | 22 uF, 10 V, X5R | 1206 | Two in parallel at U3 OUT; verify effective capacitance, stability, and ripple |
+| C_BL_LOCAL | 1 | 10 | 22 uF, 10 V, X5R | 1206 | After Q8, close to J2 backlight pins |
+| C_TP_LOCAL | 1 | 10 | 22 uF, 10 V, X5R | 1206 | Close to J2 TrackPoint supply |
+| C_BL_GATE | 1 | 10 | 10 nF, 25 V, X7R | 0603 | Q8 gate-to-source slew capacitor; tune after inrush test |
 
-## Mechanical and sourcing risks
+For 22 uF parts, select a reputable high-volume MLCC maker such as Samsung,
+Murata, Taiyo Yuden, Walsin, or Yageo. A cheap capacitor that measures 22 uF at
+zero bias may deliver only a small fraction of that at 5 V. The 1206 allowance
+is intentional.
 
-1. **J2 is the largest sourcing risk.** Obtain and physically mate the exact
-   keyboard connector before finalizing its footprint. Ideally buy several
-   identical parts or recover connectors from donor T430-family boards.
-2. **Holyiot manuals disagree about some pad numbering.** Verify GPIO names
-   against the actual module and continuity-test uncertain P1.10/P1.11 pads.
-3. **USB connector footprints are not interchangeable.** Lock J1 to the exact
-   TYPE-C-31-M-12 drawing or intentionally select another connector before PCB
-   layout.
-4. **Battery connector polarity is not standardized.** Match the actual cell,
-   clearly mark polarity on silkscreen, and use a protected cell.
-5. **TC2050-NL is only a footprint.** Buy the `TC2050-IDC-NL-050-ALL` cable
-   separately for direct use with the nRF52840 DK P19 debug-out header.
+## Circuit and layout constraints
 
-## What to measure before freezing the BOM
+- Route `ETA6002 SYS`, not `BATT`, through SW2 to the LDO and boost inputs.
+  This leaves charging active while the keyboard is switched off.
+- Give the ETA6002 exposed pad a solid analog/power-ground landing and short
+  return paths. Place L1 and its 10 uF input/22 uF SYS capacitors exactly as a
+  compact 3 MHz buck power stage.
+- Keep the LP6252 hot loop (`C_BOOST_IN`, U3 VIN/SW/OUT, L2, and output
+  capacitors) compact. Keep its switch node away from the Holyiot antenna and
+  TrackPoint DATA/CLOCK, and route feedback separately from the switch node.
+- Put Q8 after the 5 V boost and use it only for the backlight branch. Connect
+  its source to 5 V and drain to the backlight supply. A 100 kOhm
+  gate-to-source pull-up defaults it off; Q7 pulls its gate low to turn it on.
+  Drive Q7 through a 1 kOhm array element and give Q7 a 100 kOhm gate
+  pull-down. The TrackPoint 5 V branch stays on while the controller is awake.
+  Keep the separate T430 `KBD_BL_PWM` logic connection: Q8 gates supply power,
+  while the keyboard's existing PWM input controls brightness.
+- Place D1 at J1. Route USB D+/D- as a short differential pair directly to the
+  Holyiot; the charger sees VBUS and ground only.
+- Put the TrackPoint translators and their 4.7 kOhm array beside J2.
+- Do not add external pull-ups to the 3.0 V keyboard SENSE, Fn, power-button,
+  or TrackPoint MCU-side nets; firmware uses nRF52840 internal pull-ups.
+- Keep 0 Ohm measurement links accessible to an iron after assembly.
+- Follow the ETA6002 and LP6252 reference layouts before optimizing for visual
+  neatness. Power-loop geometry is part of the circuit.
 
-- T430 keyboard/Holyiot current through `LNK_3V0`, idle and during heavy key
-  activity, with both debug and release logging configurations.
-- TrackPoint has measured 5.94 mA idle, 6.47 mA during movement, and 37.1 mA
-  peak at 5 V. Recheck on the assembled PCB and retain the 50 mA peak limit.
-- Backlight current through `LNK_BL` at 5 V at 50% and 100% PWM, including
-  startup inrush. Begin with a 500 mA continuous design allowance.
-- Total battery current during BLE connected idle, BLE activity, advertising,
-  wake, TrackPoint use, and every power/profile LED pattern. Use `LNK_BAT` with
-  USB disconnected.
-- 5 V ripple and droop during TrackPoint plus full-backlight operation.
-- Temperature rise of the charger, LDO, boost converter/inductor, load switch, and USB
-  connector during charging and maximum load.
+## LCSC cart strategy
 
-After those measurements, tune the populated values if necessary, choose the
-final battery capacity and connector, and export a machine-readable BOM from
-the actual schematic rather than copying this planning table.
+1. Buy five each of U3/U4, ten U2s, three U1s, twenty Yangjie BSS138s, and ten
+   YJL3401As. Small
+   cut-tape quantities cost little and spares prevent one damaged part from
+   stopping the build.
+2. Buy 20-50 each of the discrete 0603 resistor values. Buy the smallest useful
+   MOQ of the three resistor-array values only after footprint confirmation.
+3. Buy 50 x 100 nF, 10 x each smaller capacitor, and 10-20 x the selected
+   22 uF/10 V 1206 capacitor.
+4. Buy three inductors and three of every mechanically uncertain connector or
+   switch. Confirm J1 and J2 dimensions against seller drawings before layout.
+5. Buy one protected 1-cell LiPo with a thermistor if possible. Its documented
+   continuous discharge must cover converter input current and its allowed
+   charge rate must be at least the configured approximately 190 mA.
 
-The [Nordic PPK2 documentation](https://docs.nordicsemi.com/r/bundle/ug_ppk2/page/ug/ppk/ppk_user_guide_intro.html)
-specifies up to 1 A in ampere-meter mode and 600 mA continuous in source mode.
-Use source mode at 5.0 V for the isolated TrackPoint branch. Use a separate
-current-limited supply and suitable shunt/current probe if maximum backlight or
-whole-board current can exceed those limits.
+Do not purchase an E24 assortment merely to obtain these few values unless it
+is useful for the workshop. Exact-value cut tape is cheaper, has traceable
+ratings, and avoids mystery dielectric/tolerance parts. An assortment remains
+useful only for bring-up substitutions.
+
+## Bring-up acceptance tests
+
+1. Populate and test the charger/LDO first with a current-limited supply and a
+   protected cell. Confirm approximately 196 mA charge current, termination,
+   NTC behavior, thermal behavior, the upstream 500 mA VBUS limit, and seamless
+   system power while inserting/removing USB.
+2. Populate the boost with the Holyiot and J2 disconnected. Test at 3.2, 3.7,
+   and 4.2 V input and at 50, 300, and 600 mA output. Record voltage, input
+   current, ripple, inductor/IC temperature, startup, and no-load current.
+3. Disable both LP6252 and the Q7/Q8 switch and verify the backlight connector
+   is truly unpowered. Confirm LP6252 output disconnect prevents an
+   objectionable partial rail.
+4. Test the 3.0 V rail and USB data, then fit the TrackPoint translators and
+   connector. Use the PPK2 links to measure 3.0 V logic, TrackPoint, backlight,
+   and whole-board battery current independently.
+5. Confirm every LED color and brightness, remove any unintended always-on
+   indicator, and run a long battery/USB transition test before installing the
+   board in the laptop.
+
+If the LP6252 cannot hold 5 V at 600 mA from 3.2 V without excessive ripple or
+temperature, do not enlarge traces and hope for the best. Replace that stage
+with a better-characterized boost design; the connector, measurement, and
+load-switch portions of this BOM remain valid.

@@ -1,16 +1,16 @@
-# T430 production PCB wiring and design plan
+# T430 Holyiot preliminary PCB wiring and power plan
 
 This document plans the custom PCB that will replace the nRF52840 DK with a
 Holyiot 18010 V1.0 module. It covers the T430 keyboard connector, TrackPoint,
 backlight, indicator LEDs, USB, power, SWD programming, and the corresponding
 firmware/build work.
 
-The current component shortlist and purchasing assumptions are in the
-[preliminary production PCB BOM](preliminary-bom.md).
+The current cut-tape shopping list and purchasing assumptions are in the
+[preliminary home-assembly BOM](preliminary-bom.md).
 
-> **Status:** this is the proposed production layout. It has not yet been
+> **Status:** this is the proposed Holyiot layout. It has not yet been
 > applied to the firmware. The current `thinkpad_t430.overlay` still contains
-> the tested nRF52840 DK pin assignment. Do not route a production PCB from the
+> the tested nRF52840 DK pin assignment. Do not route a preliminary PCB from the
 > DK table in the root README.
 
 ## Design goals
@@ -29,7 +29,7 @@ The current component shortlist and purchasing assumptions are in the
 
 ## References and pin-number conventions
 
-The production plan uses the newer **18010-A top-view numbering** shown in the
+The preliminary plan uses the newer **18010-A top-view numbering** shown in the
 [Holyiot 18010-A manual](https://fccid.io/2ALGY-18010-A/User-Manual/User-Manual-5877632.pdf).
 The drawing is 13.5 mm by 18 mm and labels the module `VER1.0`.
 
@@ -97,7 +97,7 @@ A four-layer PCB is strongly recommended:
 Place J7 with pin 1 nearest the Holyiot's pad 1/left-edge side. This lets the
 matrix lines leave the module in nearly the same order in which they enter J7.
 
-## Proposed production GPIO assignment
+## Proposed Holyiot GPIO assignment
 
 This assignment is optimized for the 18010-A **top-view** footprint. It must
 replace the current DK assignment in a future Holyiot-specific devicetree.
@@ -150,8 +150,8 @@ Reserved module connections:
 | 24 | USB D+ | USB connector |
 | 31 | SWDCLK | TC2050 programming footprint |
 | 32 | SWDIO | TC2050 programming footprint |
-| 38 | P1.14 | `CHG_USB500_EN`; low/boot = USB100, high after enumeration = USB500 |
-| 39 | P1.12 | `BL_5V_EN`, active-high enable for the backlight load switch |
+| 38 | P1.14 | Spare/test pad; USB input current is fixed by SY6280 hardware |
+| 39 | P1.12 | `BL_5V_EN`, active-high drive for the BSS138/P-MOS backlight switch |
 | 40 | P0.25 | `BLE_PROFILE_1_LED`, active-low current sink |
 | 41 | P0.11 | `BLE_PROFILE_2_LED`, active-low current sink |
 | 42 | P1.08 | `BLE_PROFILE_3_LED`, active-low current sink |
@@ -256,7 +256,7 @@ J7 pin 35, 3.0 V nominal
 | Microphone mute | `-LEDMICMUTE`, pin 36 | 3.9 kΩ | P0.17 |
 
 The resistors reproduce R13, R41, and R44 in the T430 motherboard schematic.
-With MOSFET gate drive, GPIO high means LED on; the production devicetree must
+With MOSFET gate drive, GPIO high means LED on; the preliminary devicetree must
 therefore use active-high GPIO semantics rather than the DK's current
 active-low direct-drive semantics.
 
@@ -279,8 +279,9 @@ Use a direct, active-low connection for each LED:
 | 2 | 41 | P0.11 | Selected BLE profile 2 |
 | 3 | 42 | P1.08 | Selected BLE profile 3 |
 
-- Use high-efficiency green, amber, or red LEDs with 4.7 kOhm initial series
-  resistors. Keep footprints compatible with 2.2-10 kOhm for brightness tuning.
+- Use high-efficiency amber LEDs with 4.7 kOhm initial series resistors. Red is
+  an acceptable substitute; do not fit green, blue, or white LEDs. Keep
+  footprints compatible with 2.2-10 kOhm for brightness tuning.
 - Do not use BSS138s, 5 V, or external pull resistors on these lines.
 - A GPIO low turns its LED on; a GPIO high or high-impedance state leaves it
   off. The Holyiot devicetree must therefore mark all three as active-low.
@@ -302,8 +303,9 @@ signal. On schematic sheet 62, the 3.3 V MEC1619 embedded controller drives
 J7 pin 25 with no level shifter. The 5 V backlight supply reaches J7 separately
 on pins 29 and 31.
 
-Use this production circuit. The PWM pin controls brightness while the load
-switch removes backlight power when it is off:
+Use this preliminary circuit. The PWM pin controls brightness while a simple
+P-channel MOSFET high-side switch removes backlight power when it is off. The
+BSS138 is a gate pull-down/level interface, not an LED driver:
 
 ```text
 Holyiot P1.04 ── 1 kΩ ──┬── J7 pin 25 KBD_BL_PWM
@@ -312,13 +314,20 @@ Holyiot P1.04 ── 1 kΩ ──┬── J7 pin 25 KBD_BL_PWM
                          │
                         GND
 
-Holyiot P1.12 ── 1 kΩ ── TPS22918 ON
+Holyiot P1.12 ── 1 kΩ ── BSS138 gate
                               │
                             100 kΩ
                               │
                              GND
 
-5V_SYS ── TPS22918 ── BL_5V ── J7 pins 29 and 31
+                       100 kΩ
+5V_SYS ────────────────/\/\/──┐
+                              │
+                    10 nF     │       YJL3401A P-MOS
+5V_SYS ──────────────||────── gate ─── source: 5V_SYS
+                              │         drain
+                         BSS138 drain     │
+                         source: GND      └── BL_5V ── J7 pins 29 and 31
 ```
 
 - Supply 5 V to both J7 pins 29 and 31 with suitably wide traces.
@@ -331,10 +340,10 @@ Holyiot P1.12 ── 1 kΩ ── TPS22918 ON
   high level to 5 V would exceed the level used by the original motherboard.
 - Place local bulk and high-frequency decoupling near J7. Start with 22 µF plus
   100 nF on the 5 V backlight rail and adjust after measuring inrush/noise.
-- Fit 10 nF from the TPS22918 `CT` pin to ground for a deliberately slow,
-  roughly 20-30 ms rise at 5 V. Leave `QOD` floating on the first revision so the
-  keyboard discharges the branch naturally; provide an unpopulated resistor
-  footprint from `QOD` to `BL_5V` for later tuning.
+- Fit 100 kΩ from P-MOS gate to source so `BL_5V` defaults off. Fit 10 nF from
+  gate to source as a preliminary slew capacitor and tune it after measuring
+  inrush. Do not claim a precise rise time until the MOSFET gate charge and
+  assembled load have been measured.
 - Firmware must assert `BL_5V_EN` before generating nonzero PWM, wait at least
   35 ms, and set PWM to zero before deasserting `BL_5V_EN`.
 - The known T430 assembly makes `-KBD_BL_DTCT` on J7 pin 21 unnecessary; leave
@@ -358,16 +367,20 @@ high level remains at or below the Holyiot supply.
 
 Buy at least 10; buying 20 is reasonable for prototypes and rework.
 
-Related resistor count:
+Use IEC E12/E24 values only. (`E10` and `E20` are not standard IEC resistor
+series.) Prefer isolated four-resistor `0603x4` arrays for repeated values:
 
-| Value | Quantity | Purpose |
-| ---: | ---: | --- |
-| 4.7 kΩ | 2 | TrackPoint DATA/CLOCK 5 V pull-ups |
-| 10 kΩ | 1 | TrackPoint RESET 5 V pull-up |
-| 1 kΩ | 1 | `KBD_BL_PWM` series protection |
-| 100 kΩ | 5 | RESET/LED MOSFET gates and `KBD_BL_PWM` boot-state pull-down |
-| 220 Ω | 1 | Power LED current limiting |
-| 3.9 kΩ | 2 | Mute and microphone-mute LED current limiting |
+| Array/value | Packages | Elements used | Purpose |
+| --- | ---: | ---: | --- |
+| 4 x 4.7 kOhm | 1 | 2 | TrackPoint DATA/CLOCK 5 V pull-ups; two unused elements are NC |
+| 4 x 4.7 kOhm | 1 | 3 | BLE-profile LEDs; one unused element is NC |
+| 4 x 1 kOhm | 1 | 2 | PWM and backlight P-MOS gate-driver series protection |
+| 4 x 100 kOhm | 2 | Up to 8 | MOSFET gates and control defaults |
+
+The arrays must contain four independent resistors in an eight-pad body. Do
+not substitute bussed/common-terminal networks. Keep the USB-C 5.1 kOhm
+resistors, converter feedback divider, and charger programming resistor as
+individual 0603 parts for inspection and tuning.
 
 ## USB-C
 
@@ -399,7 +412,7 @@ requires an adapter.
 
 Wire the target footprint one-to-one with Nordic P19:
 
-| TC2050 pad | DK P19 signal | Production PCB connection |
+| TC2050 pad | DK P19 signal | preliminary PCB connection |
 | ---: | --- | --- |
 | 1 | `SWD0_VTG` | Regulated target VDD at module pad 14 |
 | 2 | `SWD0_SWDIO` | Holyiot pad 32, SWDIO |
@@ -423,7 +436,7 @@ TC2050 layout requirements:
 - orient the cable away from the RF antenna and J7 flex cable;
 - keep components out of the probe and retaining-clip area; and
 - use the `TC2050-CLIP` for extended debugging with the no-legs cable, or hold
-  it in a production fixture for short programming operations.
+  it in a preliminary fixture for short programming operations.
 
 Add a reset pushbutton from P0.18 to ground. The Holyiot board configuration
 must enable `CONFIG_GPIO_AS_PINRESET=y`; the current DK build does not enable
@@ -431,7 +444,7 @@ that option.
 
 ### Debug-target power rules
 
-Prefer to power the production PCB normally and connect its regulated VDD to
+Prefer to power the preliminary PCB normally and connect its regulated VDD to
 TC2050 pad 1 for target detection/reference. Do not configure P19 to source
 power at the same time.
 
@@ -445,32 +458,147 @@ not consume SWO or a UART.
 
 ## Power architecture
 
-### USB-powered prototype
+### Top-level power distribution plan
 
-For a board that only needs to operate while USB is connected:
+The proof-of-concept board uses seven named power domains. Keep these names in
+the schematic, PCB, test pads, and bring-up notes:
+
+| Net | Source | Consumers | Normal range / limit |
+| --- | --- | --- | --- |
+| `USB_VBUS_RAW` | USB-C J1 through F1 and VBUS TVS | Holyiot VBUS-detect pad 22 and U4 input | Real cable VBUS only, nominal 5 V |
+| `USB_5V_LIM` | SY6280AAC U4 output | ETA6002 U1 input | Approximately 453 mA nominal limit |
+| `VSYS` | ETA6002 SYS output, supplemented by battery | Main power switch SW2 | Approximately 3.6-4.5 V while USB-powered; tracks battery through the power path otherwise |
+| `VSYS_SW` | SW2 output | ME6211 U2 and LP6252 U3 | Switched system supply; rated for at least 1.2 A |
+| `3V0` | ME6211C30 U2 from `VSYS_SW` | Holyiot VDD, keyboard logic/LED rail, low sides of translators | Regulated 3.0 V |
+| `5V_SYS` | LP6252B6F U3 from `VSYS_SW` | TrackPoint branch and backlight switch input | Approximately 5.01 V nominal; validate on the first board |
+| `BL_5V` | YJL3401A Q8 | J7 pins 29 and 31 | Switched `5V_SYS`; normally off |
 
 ```text
-USB VBUS ── protection ─┬─ 5 V TrackPoint/backlight rail
-                        └─ 3.0 V regulator ─ Holyiot and keyboard logic
+                                      ┌── Holyiot pad 22: VBUS detect only
+USB-C VBUS ─ F1 ─ VBUS TVS ─ USB_VBUS_RAW
+                                      └── SY6280AAC, ~453 mA limit ─ USB_5V_LIM
+                                                                          │
+                                                                          v
+Protected 1S LiPo ─────────────── BAT ┌──────────┐ SYS ─ VSYS ─ SW2 ─ VSYS_SW ─┬── ME6211C30 ─ 3V0
+                                     │ ETA6002  │                            │                  ├─ Holyiot VDD
+USB_5V_LIM ────────────────────── IN │ charger  │                            │                  └─ keyboard logic/LEDs
+                                     │ + power  │                            │
+                                     │   path   │                            └── LP6252 ─ 5V_SYS ─┬─ TrackPoint
+                                     └──────────┘                                                 └─ YJL3401A ─ BL_5V ─ backlight
 ```
 
-Module pad 22 should see actual USB VBUS so firmware can detect USB presence.
+All domains share the PCB ground plane. Never switch the keyboard ground; the
+matrix, TrackPoint, LEDs, USB, charger, and regulators require a common signal
+reference.
 
-### Truly wireless BLE operation
+### Operating states
 
-A wireless board still needs 5 V for the TrackPoint and backlight. It therefore
-needs a battery power path in addition to the Holyiot regulator:
+| State | Power flow | Required behavior |
+| --- | --- | --- |
+| USB absent, battery present | `BAT -> ETA6002 power path -> VSYS` | With SW2 on, 3V0 and 5V_SYS operate from the cell; backlight remains independently switchable |
+| USB present, battery present | `USB_VBUS_RAW -> SY6280 -> ETA6002`; battery charges or supplements VSYS | Total USB draw is limited near 453 mA; battery supplies load beyond the available USB input budget |
+| USB present, battery absent/dead | USB supplies ETA6002 VSYS instant-on path | Logic should boot; maximum 5 V/backlight load is constrained by U4 and converter losses |
+| Both absent | No powered rail | No rail may be held up through GPIO, USB data, SWD, or protection-diode backfeed |
+
+SW2 is downstream of ETA6002 SYS. Turning the keyboard off therefore removes
+power from both regulators while leaving the battery connected to the charger,
+so USB can charge the cell with the keyboard off. Do not put SW2 in series with
+the battery lead unless loss of off-state charging is intentional.
+
+`USB_VBUS_RAW` must not be joined to `5V_SYS`. The former indicates an actual
+host cable and feeds the charger; the latter is a locally boosted battery/SYS
+rail. This separation lets firmware distinguish USB attachment and prevents
+the boost converter from falsely asserting VBUS.
+
+### USB input and protection
+
+J1 is a USB-C sink with individual 5.1 kOhm `Rd` resistors from CC1 and CC2 to
+ground. Route VBUS through the resettable fuse and VBUS TVS to
+`USB_VBUS_RAW`. Protect D+/D- with the TECH PUBLIC `USBLC6-2SC6` beside J1 and
+route the pair directly to Holyiot D-/D+.
+
+Place the SY6280AAC between `USB_VBUS_RAW` and ETA6002 IN:
+
+- IN = `USB_VBUS_RAW`, OUT = `USB_5V_LIM`;
+- active-high EN tied to IN so it never floats;
+- 15 kOhm, 1% from ISET to ground, giving about 453 mA nominal from
+  `I_LIM = 6800/R_SET`;
+- local input/output bypass as required by the Silergy data sheet; and
+- test pads on both sides to verify drop, limiting, reverse blocking, and
+  shutdown discharge.
+
+The 453 mA setting deliberately leaves margin below 500 mA. Its tolerance must
+be measured on the first boards. This is a fixed hardware ceiling; P1.14 and
+USB enumeration no longer control charge-current mode.
+
+### Charger and dynamic power path
+
+ETA6002E8A is the only populated charger/power-path implementation:
+
+- IN from `USB_5V_LIM`;
+- BATT to the protected 4.2 V cell through the main power switch/measurement
+  arrangement;
+- SYS to `VSYS`, never substitute BATT for this connection;
+- 2.2 uH shielded inductor from SW to SYS, with saturation rating at least
+  4 A and short high-current routing;
+- 10 uF at IN, 22 uF at SYS, and 1 uF at BATT, placed as the reference circuit
+  requires;
+- 5.1 kOhm ISET for approximately 196 mA nominal fast charge; and
+- use the battery thermistor where available. A fixed in-range divider is a
+  diagnostic fallback, not thermal protection.
+
+The ETA6002 regulates SYS and dynamically connects the battery when input
+power is insufficient. This is why the backlight may use battery supplement
+while USB remains capped by the SY6280. Validate approximately 196 mA charge
+current because the ETA6002 data sheet only characterizes higher example
+currents explicitly.
+
+### Nominal 3.0 V logic distribution
+
+ME6211C30M5G-N generates `3V0` from `VSYS_SW`:
+
+- 1 uF input and output capacitors immediately beside U2;
+- EN pulled high to VSYS with a 100 kOhm array element unless a later power
+  sequencing requirement is demonstrated;
+- feed Holyiot VDD/module pad 14, T430 J7 pin 35, profile LEDs, and the 3.0 V
+  translator gates from this rail; and
+- provide `LNK_3V0` so all logic-rail current can be measured.
+
+The expected logic load is far below the regulator's 500 mA headline rating.
+Test output droop and BLE radio transients down to the intended battery cutoff.
+
+### Regulated 5 V distribution
+
+LP6252B6F generates `5V_SYS` from `VSYS_SW`:
+
+- tie EN to `VSYS_SW`, so SW2 controls the converter and its shutdown output
+  disconnect prevents the 5 V rail from being held up through U3;
+- 2.2 uH shielded inductor with at least 4 A saturation rating and low DCR,
+  using the same selected SKU as the ETA6002 inductor;
+- no external rectifier diode: LP6252 is synchronous;
+- 470 kOhm and 56 kOhm in series from OUT to FB, and 100 kOhm from FB to
+  ground, for approximately 5.01 V nominal from the 0.8 V reference;
+- 22 uF input and two 22 uF output ceramics, with effective capacitance checked
+  at operating bias; and
+- compact VIN/SW/OUT current loops, with feedback kept away from SW and
+  shielded by ground where practical.
+
+LP6252's 2.7 A figure is its typical low-side switch-current limit, not an
+output-current rating. Treat 550 mA at 5 V as an unproven design target until
+the assembled PCB passes load, startup, ripple, and thermal tests from a 3.2 V
+input. Its data sheet shows operation at 500 mA and 1 A from 3 V, but does not
+guarantee either as a production output-current rating.
+
+Split `5V_SYS` into two measured branches:
 
 ```text
-USB-C ─ charger/power path ─ battery
-                 │
-                 ├─ 3.0 V LDO ─ Holyiot + keyboard logic/LEDs
-                 └─ 5 V boost ─┬─ TrackPoint
-                               └─ backlight load switch ─ backlight
+5V_SYS ── LNK_TP ── TP_5V ───────────── J7 pin 38 TrackPoint
+       └─ LNK_BL ── Q8 P-MOS ── BL_5V ─ J7 pins 29 and 31 backlight
 ```
 
-Do not connect boosted `5V_SYS` back to Holyiot VBUS pad 22. That pad must
-indicate real USB cable presence only.
+The TrackPoint branch remains powered whenever 5V_SYS is enabled. Q8 provides
+high-side backlight supply gating; `KBD_BL_PWM` remains the independent 3.0 V
+brightness-control signal.
 
 ### Provisional current and converter budget
 
@@ -509,94 +637,14 @@ A 1000 mAh battery should be treated as roughly a 55-70 hour ordinary-use
 battery after practical capacity and conversion-loss allowances.
 
 The first PCB revision must support at least 550 mA continuous at 5 V and at
-least 1.2 A through the battery-side power path. Revision A selects the
-TPS61023 and the reference components below, but its low-battery output,
-thermal performance, and the measured backlight load still require validation.
-Its switch-current rating must not be mistaken for guaranteed 5 V output
-current.
+least 1.2 A through the battery-side power path. Low-battery LP6252 output,
+inductor/IC temperature, ripple, and the measured backlight load still
+require validation. A switch-current rating must not be mistaken for
+guaranteed 5 V output current.
 
 The connectivity LED must normally be off or use short low-duty-cycle pulses.
 A continuously lit power LED can consume several milliamps and materially
 reduce battery life.
-
-### Revision-A power-stage population
-
-The following values are deliberately conservative enough to fabricate the
-first PCB before the backlight is measured. Preserve the indicated resistor,
-solder-jumper, and test-pad access so values can be changed without respinning
-the board.
-
-#### USB charger and power path
-
-Use a [BQ24074](https://www.ti.com/lit/ds/symlink/bq24074.pdf) with these
-first-build settings:
-
-| Pin/function | Revision-A connection/value | Result |
-| --- | --- | --- |
-| `IN` | USB VBUS after fuse/TVS; 1 µF to ground at the pin | 5 V input |
-| `EN2` | Low using a 0 Ohm configuration strap | Selects USB100/USB500 modes |
-| `EN1` | Holyiot P1.14 through 1 kOhm, with 100 kOhm pull-down and optional force-high strap to `IN` | 100 mA during reset; 500 mA when firmware drives high after enumeration |
-| `ILIM` | 3.09 kOhm to ground | About 500 mA if straps are later changed to resistor-programmed mode |
-| `ISET` | 4.42 kOhm to ground | About 200 mA maximum battery charge current |
-| `ITERM` | 2.94 kOhm to ground | About 20 mA charge termination current |
-| `TMR` | 46.4 kOhm to ground | Approximately 6.25-hour fast-charge safety timer |
-| `TS` | Battery 10 kOhm NTC; alternatively fit 10 kOhm to ground | Temperature monitoring when the battery provides NTC |
-| `CE` | Low using a 0 Ohm strap | Charger enabled |
-| `BAT` | 4.7 µF to ground at the pins | Protected 1-cell LiPo connection |
-| `OUT` | 10 µF to ground at the pins | System input rail for the LDO and boost converter |
-| `CHG`, `PGOOD` | Test pads; optional 100 kOhm pull-ups to 3.0 V | Bring-up visibility without extra always-on LEDs |
-
-This configuration starts in USB100 mode and allows USB500 only after firmware
-confirms enumeration. The optional force-high strap is for a known 5 V charger
-or controlled bench bring-up, not an unknown computer port. At USB500 it
-charges a typical 1000 mAh cell at about 0.2 C. The BQ24074 gives system load
-priority, so charging slows or stops when the backlight consumes most of the
-available input power. Only use a battery whose manufacturer permits at least
-200 mA charge current; otherwise increase `ISET`.
-
-#### Nominal 3.0 V logic rail
-
-Use a fixed-output
-[TLV75530P](https://www.ti.com/lit/ds/symlink/tlv755p.pdf) LDO. This is the
-cost-optimized Revision-A choice and eliminates the second switching converter
-and its inductor:
-
-- input from BQ24074 `OUT`, with 1 µF at `IN`;
-- 1 µF at the 3.0 V output, with an additional 100 nF beside the Holyiot;
-- `EN` pulled high to the LDO input with 100 kOhm, with a test pad; and
-- SOT-23-5 `TLV75530PDBVR` footprint, with copper sized for useful heat
-  spreading rather than only the minimum land pattern.
-
-The TLV75530P regulates while its input remains above 3.0 V plus dropout. Near
-the bottom of a LiPo discharge its output can fall below 3.0 V instead of
-boosting the remaining battery voltage. The nRF52840 itself tolerates this, but
-Revision A must verify matrix operation, indicator brightness, and BLE/USB
-behavior from a full battery down to the protected battery's cutoff. Treat a
-failed low-battery test as a reason to repopulate a later revision with a
-buck-boost, not as permission to over-discharge the cell.
-
-Place the LDO and its two capacitors close together. Keeping this rail linear
-also removes a switching-noise source near the Holyiot antenna and TrackPoint
-DATA/CLOCK routes.
-
-#### Regulated 5 V rail
-
-Populate the [TPS61023](https://www.ti.com/lit/ds/symlink/tps61023.pdf) using
-its published single-cell-to-5 V starting values:
-
-- 1 µH shielded inductor, at least 4 A RMS, at least 5 A saturation, and low DCR;
-- 10 µF input capacitance;
-- two 22 µF, 10 V output capacitors, with DC-bias derating checked;
-- 732 kOhm from `VOUT` to `FB` and 100 kOhm from `FB` to ground for 5 V;
-- `EN` tied to the system input through a default-fitted 0 Ohm link, with an
-  alternate unpopulated GPIO-enable selection pad; and
-- 22 µF plus 100 nF locally on each of the TrackPoint and switched-backlight
-  branches near J7.
-
-The converter has ample margin for the measured 37.1 mA TrackPoint peak and the
-provisional 500 mA backlight allowance. Keep the `SW` copper small, keep the
-inductor and input/output capacitors beside the IC, and do not route `FB` near
-`SW` or the inductor.
 
 ### Current-measurement provisions
 
@@ -604,10 +652,10 @@ Add labeled removable links and test pads so the Power Profiler Kit II (PPK2)
 can be inserted without cutting PCB traces:
 
 ```text
-5V_SYS -- LNK_TP -- TP_5V  -- J7 pin 38
-       `- LNK_BL -- BL_5V  -- J7 pins 29 and 31
+5V_SYS -- LNK_TP -- TP_5V  -------- J7 pin 38
+       `- LNK_BL -- Q8 -- BL_5V  -- J7 pins 29 and 31
 
-BAT+   -- LNK_BAT -- complete board power path
+BAT+   -- LNK_BAT -- ETA6002 BATT
 3V0    -- LNK_3V0 -- Holyiot and keyboard-logic/LED branch
 ```
 
@@ -649,7 +697,7 @@ mode, and 600 mA continuous in source mode. Use it as follows:
    supply and a suitable shunt/current probe instead. Do not exceed the PPK2's
    1 A ampere-meter limit.
 
-Revision-A acceptance limits are TrackPoint current no more than 10 mA
+First-build acceptance limits are TrackPoint current no more than 10 mA
 continuous and 50 mA peak at 5 V, complete no-backlight battery current no more
 than 20 mA during ordinary connected idle, and no unexplained reset-correlated
 current spikes. A result above a limit is not automatically a faulty keyboard,
@@ -657,7 +705,7 @@ but it must be understood before freezing the boost converter or battery size.
 
 ## Suspend, idle, and host wake behavior
 
-The initial production firmware deliberately uses light CPU idle, not nRF52840
+The initial preliminary firmware deliberately uses light CPU idle, not nRF52840
 System OFF. Zephyr can idle the CPU between interrupts while the Bluetooth
 controller maintains a connection or advertising. A matrix, power-button, or
 TrackPoint interrupt wakes the CPU and ZMK immediately resumes reporting.
@@ -709,24 +757,24 @@ does not dominate battery consumption.
 
 ## Firmware and build plan
 
-Keep the working DK target and add a separate production board target:
+Keep the working DK target and add a separate preliminary board target:
 
 | Target | Purpose |
 | --- | --- |
 | `nrf52840dk_nrf52840 + thinkpad_t430` | Existing bench and TrackPoint testing |
-| `holyiot_18010_nrf52840 + thinkpad_t430` | Production PCB |
+| `holyiot_18010_nrf52840 + thinkpad_t430` | preliminary PCB |
 
 The Holyiot board definition must provide:
 
-- the production GPIO assignment in this document;
+- the preliminary GPIO assignment in this document;
 - the module's low-frequency crystal configuration;
 - USB device support and internal flash/settings partitions;
 - P0.18 hardware reset;
 - J-Link/SWD runner support;
 - no DK buttons, DK LEDs, QSPI flash, or J-Link UART assumptions;
 - UARTE reception plus GPIO clock interrupts for the TrackPoint;
-- P1.14 charger-current control that remains low during reset and selects
-  USB500 only after the USB device is configured, returning low on detach;
+- no firmware-controlled charger-current mode; P1.14 remains spare because
+  SY6280 sets the USB input ceiling in hardware;
 - P1.12 backlight-rail enable sequencing around the existing PWM control;
 - active-low P0.25/P0.11/P1.08 outputs for BLE profile LEDs 1-3;
 - interrupt-capable wake inputs for the matrix, Fn, power button, and
@@ -790,7 +838,7 @@ guaranteed recovery path.
 - [ ] All eight SENSE inputs rely on internal pull-ups.
 - [ ] Fn and power inputs rely on internal pull-ups.
 - [ ] TrackPoint low side relies on internal pull-ups; high side has 4.7 kΩ.
-- [ ] Six BSS138 footprints fitted with correct source/drain orientation.
+- [ ] Seven Yangjie BSS138 footprints fitted with correct source/drain orientation.
 - [ ] LED current-limit and MOSFET gate pull-down resistors fitted.
 - [ ] Three profile LEDs are labeled 1-3 and route through 4.7 kΩ from `3V0`
       to active-low P0.25, P0.11, and P1.08 respectively.
@@ -799,10 +847,15 @@ guaranteed recovery path.
 - [ ] J7 pin 25 was checked for an unexpected 5 V pull-up before connection to
       the Holyiot.
 - [ ] USB CC resistors, ESD protection, and VBUS protection included.
-- [ ] BQ24074 EN1 defaults low for USB100 and can be driven by P1.14 only after
-      enumeration; the force-USB500 strap is clearly marked and normally open.
-- [ ] TPS22918 backlight switch defaults off, uses 10 nF on `CT`, and is driven
-      by P1.12 separately from the P1.04 brightness PWM.
+- [ ] SY6280 is between raw VBUS and ETA6002 IN, uses 15 kOhm ISET, and its
+      measured current ceiling remains below 500 mA across intended conditions.
+- [ ] ETA6002 uses SYS, not BAT, as the board supply and charges near 196 mA
+      with the selected 5.1 kOhm ISET resistor.
+- [ ] ETA6002 and LP6252 discrete power stages follow their reference layouts;
+      there are no daughter modules or alternate parallel regulator paths.
+- [ ] YJL3401A backlight switch defaults off through a 100 kOhm gate-source
+      pull-up, uses the preliminary 10 nF slew capacitor, and is driven by a
+      BSS138 from P1.12 separately from the P1.04 brightness PWM.
 - [ ] SWDIO, SWDCLK, reset, target VDD, and ground reach the TC2050 footprint.
 - [ ] TC2050 pad 3 is grounded so DK P19 selects the external target.
 - [ ] Reset button and accessible VDD/GND test points included.
@@ -818,3 +871,6 @@ guaranteed recovery path.
       measured 6.47 mA active, 10 mA continuous-design, and 50 mA peak budgets.
 - [ ] Backlight current and inrush were measured without exceeding PPK2 limits.
 - [ ] Battery, charger, regulator, and 5 V boost current budgets finalized.
+- [ ] 5 V module passed 50/300/600 mA load tests at 3.2 V input without
+      excessive droop, ripple, heat, or automatic low-load shutdown.
+- [ ] No green or unintended always-on LED is fitted or enabled.

@@ -13,12 +13,12 @@ Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
 - the speaker-mute and microphone-mute LEDs; and
 - three low-power BLE-profile indicator LEDs.
 
-Planning the custom Holyiot board? See the
-[production PCB wiring and design plan](docs/production-pcb-wiring.md). The
-production GPIO assignment is intentionally optimized for PCB routing and is
+Planning the custom Holyiot board? Start with the
+[Holyiot preliminary PCB wiring and power plan](docs/preliminary-pcb-wiring.md). The
+Holyiot GPIO assignment is intentionally optimized for PCB routing and is
 different from the DK bring-up wiring documented below. A separate
-[preliminary BOM](docs/preliminary-bom.md) lists candidate components and
-current sourcing assumptions.
+[preliminary home-assembly BOM](docs/preliminary-bom.md) is an LCSC cut-tape-oriented
+shopping list using SMD modules, jelly-bean parts, and E12/E24 resistor values.
 
 ## Before wiring anything
 
@@ -96,7 +96,7 @@ mute, and mic-mute state can be tested before the keyboard LEDs are connected.
 
 ### BLE-profile LEDs on the DK
 
-The production PCB will have three adjacent LEDs labeled `1`, `2`, and `3`.
+The preliminary PCB will have three adjacent LEDs labeled `1`, `2`, and `3`.
 The DK build provides the same firmware behavior using LED4 plus two external
 LEDs:
 
@@ -107,7 +107,8 @@ LEDs:
 | 3 | P0.05 | `3.3 V -> 4.7 kΩ -> LED anode`; LED cathode to P0.05 |
 
 The two external LEDs are active-low: the GPIO sinks approximately 0.2-0.3 mA
-when illuminated. Use green, amber, or red LEDs rather than blue or white.
+when illuminated. Use amber LEDs to match the preliminary design; red is an
+acceptable substitute. Do not use green, blue, or white LEDs.
 P0.05 is normally the DK virtual-serial RTS signal; this shield releases RTS
 while retaining UART TX/RX logging through the J-Link serial port.
 
