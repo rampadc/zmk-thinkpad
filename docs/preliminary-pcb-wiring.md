@@ -127,7 +127,7 @@ replace the current DK assignment in a future Holyiot-specific devicetree.
 | `DRV0` | 22 | 28 | P1.03 | Matrix output |
 | `-LEDPWR` | 23 | 29 | P1.01 | Drives an external low-side MOSFET |
 | `DRV11` | 24 | 30 | P1.02 | Matrix output |
-| `KBD_BL_PWM` | 25 | 33 | P1.04 | 1 kHz, 3.0 V PWM through 1 kΩ; 100 kΩ pull-down at J7 |
+| `KBD_BL_PWM` | 25 | 33 | P1.04 | Direct 1 kHz, 0-3.0 V push-pull PWM; no external pull or level shifter |
 | `DRV14` | 26 | 34 | P1.06 | Matrix output |
 | `DRV12` | 28 | 47 | P1.07 | Matrix output |
 | `DRV15` | 30 | 48 | P1.05 | Matrix output |
@@ -308,11 +308,7 @@ P-channel MOSFET high-side switch removes backlight power when it is off. The
 BSS138 is a gate pull-down/level interface, not an LED driver:
 
 ```text
-Holyiot P1.04 ── 1 kΩ ──┬── J7 pin 25 KBD_BL_PWM
-                         │
-                       100 kΩ
-                         │
-                        GND
+Holyiot P1.04 ─────────────── J7 pin 25 KBD_BL_PWM
 
 Holyiot P1.12 ── 1 kΩ ── BSS138 gate
                               │
@@ -332,10 +328,9 @@ Holyiot P1.12 ── 1 kΩ ── BSS138 gate
 
 - Supply 5 V to both J7 pins 29 and 31 with suitably wide traces.
 - Drive J7 pin 25 only with 0-3.0 V PWM from P1.04.
-- Fit the 1 kΩ series resistor to limit fault/backfeed current and reduce edge
-  ringing. It is not a voltage divider or level shifter.
-- Fit the 100 kΩ pull-down on the J7 side of the series resistor so the
-  backlight remains off while the nRF GPIO is high-impedance during boot.
+- Match the original motherboard topology: the PWM path is a direct push-pull
+  logic connection with no series resistor or external pull-down. The separate
+  high-side supply switch keeps the backlight unpowered during GPIO startup.
 - Do not put a BSS138 or a pull-up to 5 V in the PWM path. Translating the PWM
   high level to 5 V would exceed the level used by the original motherboard.
 - Place local bulk and high-frequency decoupling near J7. Start with 22 µF plus
@@ -353,8 +348,8 @@ Before connecting P1.04 during first bring-up, power the keyboard's 3.0 V and
 5 V rails with J7 pin 25 disconnected and measure pin 25 relative to ground.
 It must not rise toward 5 V. This verifies that the particular keyboard,
 including an aftermarket replacement, does not contain an unexpected 5 V
-pull-up. Then connect the PWM through the 1 kΩ resistor and confirm that its
-high level remains at or below the Holyiot supply.
+pull-up. Then connect the direct PWM signal and confirm that its high level
+remains at or below the Holyiot supply.
 
 ## BSS138 quantity and supporting resistors
 
@@ -374,7 +369,6 @@ series.) Prefer isolated four-resistor `0603x4` arrays for repeated values:
 | --- | ---: | ---: | --- |
 | 4 x 4.7 kOhm | 1 | 2 | TrackPoint DATA/CLOCK 5 V pull-ups; two unused elements are NC |
 | 4 x 4.7 kOhm | 1 | 3 | BLE-profile LEDs; one unused element is NC |
-| 4 x 1 kOhm | 1 | 2 | PWM and backlight P-MOS gate-driver series protection |
 | 4 x 100 kOhm | 2 | Up to 8 | MOSFET gates and control defaults |
 
 The arrays must contain four independent resistors in an eight-pad body. Do
@@ -383,6 +377,12 @@ resistors, converter feedback divider, and charger programming resistor as
 individual 0603 parts for inspection and tuning.
 
 ## USB-C
+
+Use Korean Hroparts `TYPE-C-31-M-12` (`C165948`), a right-angle 16-contact
+USB 2.0 receptacle. Use its exact manufacturer land pattern: the signal pads
+are SMD and the four shell stakes pass through the PCB. Put it on the board
+edge with the shell opening and board-edge setback checked against the
+mechanical drawing; do not substitute a visually similar Type-C footprint.
 
 | USB-C function | Holyiot connection |
 | --- | --- |
@@ -438,9 +438,12 @@ TC2050 layout requirements:
 - use the `TC2050-CLIP` for extended debugging with the no-legs cable, or hold
   it in a preliminary fixture for short programming operations.
 
-Add a reset pushbutton from P0.18 to ground. The Holyiot board configuration
-must enable `CONFIG_GPIO_AS_PINRESET=y`; the current DK build does not enable
-that option.
+Use SHOU HAN `TS24CA` (`C393942`) as the reset pushbutton from P0.18 to ground.
+It is a side-actuated, momentary SPST-NO switch; place its actuator at an
+accessible board edge and use the exact drawing footprint. It closes only
+while pressed and must not be used as the main-power latch. The Holyiot board
+configuration must enable `CONFIG_GPIO_AS_PINRESET=y`; the current DK build
+does not enable that option.
 
 ### Debug-target power rules
 
@@ -460,31 +463,35 @@ not consume SWO or a UART.
 
 ### Top-level power distribution plan
 
-The proof-of-concept board uses seven named power domains. Keep these names in
+The proof-of-concept board uses nine named power domains. Keep these names in
 the schematic, PCB, test pads, and bring-up notes:
 
 | Net | Source | Consumers | Normal range / limit |
 | --- | --- | --- | --- |
-| `USB_VBUS_RAW` | USB-C J1 through F1 and VBUS TVS | Holyiot VBUS-detect pad 22 and U4 input | Real cable VBUS only, nominal 5 V |
+| `BAT_RAW+` | J3 JST-PH or alternative solder holes | F2 only | Protected 1S LiPo, 3.7 V nominal/4.2 V maximum; Adafruit/Feather polarity |
+| `BAT_PROTECTED` | F2 output, clamped against reverse polarity by D6 | LNK_BAT and ETA6002 BATT | Bidirectional charge/discharge path, at least 1.2 A design current |
+| `USB_VBUS_RAW` | USB-C J1 through F1, shunt-clamped by PTVS5V0S1UR | Holyiot VBUS-detect pad 22 and U4 input | Real cable VBUS only, nominal 5 V |
 | `USB_5V_LIM` | SY6280AAC U4 output | ETA6002 U1 input | Approximately 453 mA nominal limit |
-| `VSYS` | ETA6002 SYS output, supplemented by battery | Main power switch SW2 | Approximately 3.6-4.5 V while USB-powered; tracks battery through the power path otherwise |
-| `VSYS_SW` | SW2 output | ME6211 U2 and LP6252 U3 | Switched system supply; rated for at least 1.2 A |
+| `VSYS` | ETA6002 SYS output, supplemented by battery | YJL3401A system high-side P-MOSF | Approximately 3.6-4.5 V while USB-powered; tracks battery through the power path otherwise |
+| `VSYS_SW` | System high-side P-MOSF output | ME6211 U2 and SY7069 U3 | Switched system supply; rated for at least 1.2 A |
 | `3V0` | ME6211C30 U2 from `VSYS_SW` | Holyiot VDD, keyboard logic/LED rail, low sides of translators | Regulated 3.0 V |
-| `5V_SYS` | LP6252B6F U3 from `VSYS_SW` | TrackPoint branch and backlight switch input | Approximately 5.01 V nominal; validate on the first board |
+| `5V_SYS` | SY7069ADC U3 from `VSYS_SW` | TrackPoint branch and backlight switch input | Approximately 4.96 V nominal; validate on the first board |
 | `BL_5V` | YJL3401A Q8 | J7 pins 29 and 31 | Switched `5V_SYS`; normally off |
 
 ```text
                                       ┌── Holyiot pad 22: VBUS detect only
-USB-C VBUS ─ F1 ─ VBUS TVS ─ USB_VBUS_RAW
+USB-C VBUS ─ F1 ─┬─ USB_VBUS_RAW
+                  └─ PTVS5V0S1UR ─ GND
                                       └── SY6280AAC, ~453 mA limit ─ USB_5V_LIM
                                                                           │
                                                                           v
-Protected 1S LiPo ─────────────── BAT ┌──────────┐ SYS ─ VSYS ─ SW2 ─ VSYS_SW ─┬── ME6211C30 ─ 3V0
-                                     │ ETA6002  │                            │                  ├─ Holyiot VDD
-USB_5V_LIM ────────────────────── IN │ charger  │                            │                  └─ keyboard logic/LEDs
-                                     │ + power  │                            │
-                                     │   path   │                            └── LP6252 ─ 5V_SYS ─┬─ TrackPoint
-                                     └──────────┘                                                 └─ YJL3401A ─ BL_5V ─ backlight
+Protected 1S LiPo ─ J3 ─ F2 ─ BAT_PROTECTED ─ LNK_BAT ─ BATT ┌──────────┐ SYS ─ VSYS ─ system P-MOS ─ VSYS_SW ─┬── ME6211C30 ─ 3V0
+                                  │                           │ ETA6002  │                            │                  ├─ Holyiot VDD
+                             D6 cathode                        │ charger  │                            │                  └─ keyboard logic/LEDs
+                                  │                            │ + power  │                            │
+                            D6 anode: GND                      │   path   │                            └── SY7069 ─ 5V_SYS ─┬─ TrackPoint
+USB_5V_LIM ─────────────────────────────────────────────── IN │          │                                                 └─ YJL3401A ─ BL_5V ─ backlight
+                                                              └──────────┘
 ```
 
 All domains share the PCB ground plane. Never switch the keyboard ground; the
@@ -495,15 +502,35 @@ reference.
 
 | State | Power flow | Required behavior |
 | --- | --- | --- |
-| USB absent, battery present | `BAT -> ETA6002 power path -> VSYS` | With SW2 on, 3V0 and 5V_SYS operate from the cell; backlight remains independently switchable |
+| USB absent, battery present | `BAT -> ETA6002 power path -> VSYS` | With the latch on, 3V0 and 5V_SYS operate from the cell; backlight remains independently switchable |
 | USB present, battery present | `USB_VBUS_RAW -> SY6280 -> ETA6002`; battery charges or supplements VSYS | Total USB draw is limited near 453 mA; battery supplies load beyond the available USB input budget |
 | USB present, battery absent/dead | USB supplies ETA6002 VSYS instant-on path | Logic should boot; maximum 5 V/backlight load is constrained by U4 and converter losses |
 | Both absent | No powered rail | No rail may be held up through GPIO, USB data, SWD, or protection-diode backfeed |
 
-SW2 is downstream of ETA6002 SYS. Turning the keyboard off therefore removes
-power from both regulators while leaving the battery connected to the charger,
-so USB can charge the cell with the keyboard off. Do not put SW2 in series with
-the battery lead unless loss of off-state charging is intentional.
+### Physical switch roles
+
+| Physical control | Type | Connected function | User-visible result |
+| --- | --- | --- | --- |
+| SHOU HAN `TS24CA` | Momentary SPST-NO | Holyiot P0.18/`nRESET` to GND | Restarts the controller while held; power remains on |
+| XKB `XKB5858-Z-E` | Latching DPDT, top-actuated | One pole drives the system P-MOSFET gate through 10 kOhm; the other pole is unused | Holds `VSYS_SW` on or off after the button is released |
+| T430 `-PWRSWITCH` button | Separate momentary keyboard contact | Holyiot GPIO/firmware input | Toggles USB/BLE output or performs the configured key behavior; it does not switch a supply rail |
+
+The YJL3401A system high-side P-MOSFET is downstream of ETA6002 SYS. Turning
+the XKB5858-Z-E latch off therefore removes power from both regulators while
+leaving the battery connected to the charger, so USB can charge the cell with
+the keyboard off. The latch carries gate current only: connect its common to
+the P-MOSFET gate through 10 kOhm, its on throw to ground, and leave its off
+throw unconnected. Leave every contact of its second pole unconnected. The
+datasheet shows the DPDT contact arrangement, but confirm the common and the
+throw closed in the desired latched-ON state with a continuity meter before
+assigning PCB pads. A 100 kOhm gate-to-source pull-up defaults the system off;
+fit 100 nF gate-to-source to slow contact-bounce and inrush edges. The nominal
+RC time constants are about 1 ms turning on and 10 ms turning off, but MOSFET
+threshold and load make the actual rail ramp nonlinear. Put neither the
+P-MOSFET nor the latch in series with the battery lead, because that would
+disable off-state charging. Do not add an LC network: there is no inductive
+latch load, and an underdamped LC can create the ringing it is intended to
+prevent.
 
 `USB_VBUS_RAW` must not be joined to `5V_SYS`. The former indicates an actual
 host cable and feeds the charger; the latter is a locally boosted battery/SYS
@@ -513,9 +540,13 @@ the boost converter from falsely asserting VBUS.
 ### USB input and protection
 
 J1 is a USB-C sink with individual 5.1 kOhm `Rd` resistors from CC1 and CC2 to
-ground. Route VBUS through the resettable fuse and VBUS TVS to
-`USB_VBUS_RAW`. Protect D+/D- with the TECH PUBLIC `USBLC6-2SC6` beside J1 and
-route the pair directly to Holyiot D-/D+.
+ground. Route VBUS through the resettable fuse to `USB_VBUS_RAW`. Shunt that
+net to ground with a Nexperia `PTVS5V0S1UR,115` (`C478011`): cathode to VBUS,
+anode to ground, using a short wide ground return. This TVS protects against
+transient energy; its 9.2 V specified high-current clamp is not a precision
+5 V overvoltage regulator. Validate leakage and temperature with a
+current-limited 5.5 V input on the first board. Protect D+/D- with the TECH
+PUBLIC `USBLC6-2SC6` beside J1 and route the pair directly to Holyiot D-/D+.
 
 Place the SY6280AAC between `USB_VBUS_RAW` and ETA6002 IN:
 
@@ -533,14 +564,45 @@ USB enumeration no longer control charge-current mode.
 
 ### Charger and dynamic power path
 
+J3 is a genuine JST `S2B-PH-SM4-TB(LF)(SN)` wired for Adafruit/Feather
+polarity. The connector and nearby rear silkscreen must say `1S LiPo ONLY`,
+`4.2 V MAX`, `RED +`, and `BLACK -`. JST-PH prevents rotated insertion but does
+not standardize which wire is positive, so these labels remain necessary.
+
+Protect the bidirectional battery connection as follows:
+
+```text
+J3 red/BAT+ ─ BAT_RAW+ ─ F2, 2 A fast fuse ─ BAT_PROTECTED ─ LNK_BAT ─ ETA6002 BATT
+J3 black/GND ────────────────────────────────────────────────────────── GND
+
+                                      BAT_PROTECTED
+                                            │
+                                      cathode D6 SS34
+                                      anode   │
+                                            GND
+```
+
+Correct polarity reverse-biases D6, leaving only the fuse resistance in the
+normal charge/discharge path. Reverse polarity forward-biases D6 and makes F2
+or the protected pack open the fault instead of applying a negative voltage to
+the charger. Do not substitute a conventional single-P-MOS reverse protector:
+that common load-only circuit can turn back on when USB powers a charger.
+Qualify the fuse/diode combination with a current-limited battery emulator both
+before and after attaching USB. F2 is replaceable and must be inspected after
+any polarity fault.
+
+Place D6 and F2 directly beside J3 with short, wide copper. Add `BAT_RAW+`,
+`BAT_PROTECTED`, and paired ground test pads. Optional large plated BAT+/GND
+solder holes may bypass the connector for an expert-wired pack, but they feed
+`BAT_RAW+` ahead of F2 and must never be used at the same time as J3.
+
 ETA6002E8A is the only populated charger/power-path implementation:
 
 - IN from `USB_5V_LIM`;
-- BATT to the protected 4.2 V cell through the main power switch/measurement
-  arrangement;
+- BATT to `BAT_PROTECTED` through `LNK_BAT`; the system switch is not in the battery lead;
 - SYS to `VSYS`, never substitute BATT for this connection;
-- 2.2 uH shielded inductor from SW to SYS, with saturation rating at least
-  4 A and short high-current routing;
+- cjiang `FXL0420-2R2-M` 2.2 uH molded inductor from SW to SYS, rated 4.5 A
+  with 5 A saturation current; use short, wide high-current routing;
 - 10 uF at IN, 22 uF at SYS, and 1 uF at BATT, placed as the reference circuit
   requires;
 - 5.1 kOhm ISET for approximately 196 mA nominal fast charge; and
@@ -569,22 +631,21 @@ Test output droop and BLE radio transients down to the intended battery cutoff.
 
 ### Regulated 5 V distribution
 
-LP6252B6F generates `5V_SYS` from `VSYS_SW`:
+SY7069ADC generates `5V_SYS` from `VSYS_SW`:
 
-- tie EN to `VSYS_SW`, so SW2 controls the converter and its shutdown output
+- tie EN to `VSYS_SW`, so the system high-side switch controls the converter and its shutdown output
   disconnect prevents the 5 V rail from being held up through U3;
-- 2.2 uH shielded inductor with at least 4 A saturation rating and low DCR,
-  using the same selected SKU as the ETA6002 inductor;
-- no external rectifier diode: LP6252 is synchronous;
-- 470 kOhm and 56 kOhm in series from OUT to FB, and 100 kOhm from FB to
-  ground, for approximately 5.01 V nominal from the 0.8 V reference;
+- cjiang `FXL0420-1R5-M` 1.5 uH molded inductor, rated 5 A with 6 A saturation;
+- no external rectifier diode: SY7069 is synchronous;
+- 470 kOhm from OUT to FB and 150 kOhm from FB to ground, for approximately
+  4.96 V nominal from the 1.2 V reference;
 - 22 uF input and two 22 uF output ceramics, with effective capacitance checked
   at operating bias; and
 - compact VIN/SW/OUT current loops, with feedback kept away from SW and
   shielded by ground where practical.
 
-LP6252's 2.7 A figure is its typical low-side switch-current limit, not an
-output-current rating. Treat 550 mA at 5 V as an unproven design target until
+SY7069's 3 A figure is its minimum valley-current limit, not an output-current
+rating. Treat 550 mA at 5 V as an unproven design target until
 the assembled PCB passes load, startup, ripple, and thermal tests from a 3.2 V
 input. Its data sheet shows operation at 500 mA and 1 A from 3 V, but does not
 guarantee either as a production output-current rating.
@@ -637,7 +698,7 @@ A 1000 mAh battery should be treated as roughly a 55-70 hour ordinary-use
 battery after practical capacity and conversion-loss allowances.
 
 The first PCB revision must support at least 550 mA continuous at 5 V and at
-least 1.2 A through the battery-side power path. Low-battery LP6252 output,
+least 1.2 A through the battery-side power path. Low-battery SY7069 output,
 inductor/IC temperature, ripple, and the measured backlight load still
 require validation. A switch-current rating must not be mistaken for
 guaranteed 5 V output current.
@@ -655,7 +716,7 @@ can be inserted without cutting PCB traces:
 5V_SYS -- LNK_TP -- TP_5V  -------- J7 pin 38
        `- LNK_BL -- Q8 -- BL_5V  -- J7 pins 29 and 31
 
-BAT+   -- LNK_BAT -- ETA6002 BATT
+BAT_RAW+ -- F2/D6 protection -- BAT_PROTECTED -- LNK_BAT -- ETA6002 BATT
 3V0    -- LNK_3V0 -- Holyiot and keyboard-logic/LED branch
 ```
 
@@ -842,8 +903,8 @@ guaranteed recovery path.
 - [ ] LED current-limit and MOSFET gate pull-down resistors fitted.
 - [ ] Three profile LEDs are labeled 1-3 and route through 4.7 kΩ from `3V0`
       to active-low P0.25, P0.11, and P1.08 respectively.
-- [ ] `KBD_BL_PWM` is a 3.0 V direct signal with 1 kΩ series protection and a
-      100 kΩ pull-down; it has no BSS138 or 5 V pull-up.
+- [ ] `KBD_BL_PWM` is a direct 0-3.0 V push-pull signal with no series resistor,
+      external pull-down, BSS138, or 5 V pull-up.
 - [ ] J7 pin 25 was checked for an unexpected 5 V pull-up before connection to
       the Holyiot.
 - [ ] USB CC resistors, ESD protection, and VBUS protection included.
@@ -851,7 +912,7 @@ guaranteed recovery path.
       measured current ceiling remains below 500 mA across intended conditions.
 - [ ] ETA6002 uses SYS, not BAT, as the board supply and charges near 196 mA
       with the selected 5.1 kOhm ISET resistor.
-- [ ] ETA6002 and LP6252 discrete power stages follow their reference layouts;
+- [ ] ETA6002 and SY7069 discrete power stages follow their reference layouts;
       there are no daughter modules or alternate parallel regulator paths.
 - [ ] YJL3401A backlight switch defaults off through a 100 kOhm gate-source
       pull-up, uses the preliminary 10 nF slew capacitor, and is driven by a
@@ -867,6 +928,10 @@ guaranteed recovery path.
 - [ ] USB remote wake works with the intended BIOS/UEFI and OS settings.
 - [ ] BLE wake behavior is verified on every intended host/OS combination.
 - [ ] Idle current and 30-minute BLE response latency are measured on battery.
+- [ ] J3 is genuine 2-pin JST-PH with Adafruit/Feather polarity and explicit
+      red-positive, black-negative, 1S, and 4.2 V maximum markings.
+- [ ] F2/D6 reverse-battery protection is tested using a current-limited
+      emulator with USB both absent and present; F2 is replaced after tripping.
 - [ ] TrackPoint stays within, or any deviation explains changes to, the
       measured 6.47 mA active, 10 mA continuous-design, and 50 mA peak budgets.
 - [ ] Backlight current and inrush were measured without exceeding PPK2 limits.

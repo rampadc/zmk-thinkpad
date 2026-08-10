@@ -20,6 +20,21 @@ different from the DK bring-up wiring documented below. A separate
 [preliminary home-assembly BOM](docs/preliminary-bom.md) is an LCSC cut-tape-oriented
 shopping list using SMD modules, jelly-bean parts, and E12/E24 resistor values.
 
+### Custom-board physical controls
+
+The custom-board plan has three controls with deliberately different roles:
+
+| Control | Electrical type | Purpose |
+| --- | --- | --- |
+| Original T430 power button | Separate momentary keyboard contact | Firmware key: toggles USB/BLE output; it does not remove board power |
+| SHOU HAN `TS24CA` | Momentary SPST-NO side pushbutton | Service/recovery reset: pulls the Holyiot nRF52840 `nRESET` input low only while pressed |
+| XKB `XKB5858-Z-E` | Latching DPDT top pushbutton | Main hardware power: holds the system P-MOSFET on or off; it does not connect directly in series with the battery |
+
+The reset and main-power switches are separate parts. Pressing reset restarts
+firmware but leaves the power rails enabled. Operating the latch turns the
+3.0 V and 5 V system rails off or on while leaving the ETA6002 battery charger
+connected, so a fitted battery can still charge while the keyboard is off.
+
 ## Before wiring anything
 
 The nRF52840 is a **3.3 V device and its GPIOs are not 5 V tolerant**. Do not
