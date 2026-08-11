@@ -2,8 +2,8 @@
 
 menuconfig THINKPAD_T470_MATRIX_DISCOVERY
     bool "ThinkPad T470 matrix discovery logging"
-    default y if SHIELD_THINKPAD_T470
+    default n
     depends on LOG
     help
-      Logs each raw keyboard press and release as a DRV/SENSE coordinate and
-      identifies the separate HOTKEY input. Intended for initial matrix mapping.
+      Guides the user through the US T470 layout and records each raw
+      DRV/SENSE coordinate. Enable only when remapping another keyboard.

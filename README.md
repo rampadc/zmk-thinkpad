@@ -1,12 +1,12 @@
 # ThinkPad T470 ZMK firmware
 
-This repository is an initial ZMK bring-up target for a ThinkPad T470 keyboard
+This repository provides ZMK firmware for a US-layout ThinkPad T470 keyboard
 using a Nordic nRF52840 DK. The current scope is deliberately narrow:
 
 - scan the 16 x 8 keyboard matrix;
 - scan the separate Fn (`-HOTKEY`) contact;
 - expose USB and BLE keyboard transports; and
-- provide a safe, inert raw matrix map for discovering physical key positions.
+- provide the complete 84-key US keymap, including the separate Fn key.
 
 TrackPoint, mouse buttons, backlight, indicator LEDs, and other keyboard
 electronics are not implemented yet.
@@ -31,15 +31,22 @@ west build -s .zmk/zmk/app -d .zmk/build/thinkpad_t470 -b nrf52840dk_nrf52840 --
   -DZMK_EXTRA_MODULES="$PWD"
 ```
 
-The initial keymap intentionally emits no HID keys. Use debug logging to map
-each physical key to its `DRVn`/`SENSEn` coordinate before adding the final
-physical layout and bindings.
+The default firmware is ready for normal typing. Holding Fn provides the
+ThinkPad media functions on F1 through F6: mute, volume down/up, microphone
+mute, and brightness down/up.
 
-## Scan the matrix on the nRF52840 DK
+## Optional matrix rediscovery
 
-The discovery build guides you through all 84 keys on a US T470 keyboard
-without sending keys to the host. Flash this file through the DK's `JLINK`
-drive:
+The discovery helper remains available if another T470 keyboard needs to be
+mapped. Enable it temporarily by adding this line to
+`boards/shields/thinkpad_t470/thinkpad_t470.conf` and rebuilding:
+
+```text
+CONFIG_THINKPAD_T470_MATRIX_DISCOVERY=y
+```
+
+It guides you through all 84 keys without sending keys to the host. Flash the
+result through the DK's `JLINK` drive:
 
 ```sh
 cp .zmk/build/thinkpad_t470/zephyr/zmk.hex /Volumes/JLINK/
