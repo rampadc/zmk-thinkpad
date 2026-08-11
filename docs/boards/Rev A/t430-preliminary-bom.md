@@ -13,6 +13,10 @@ guarantee: re-check the MPN, package, data sheet, lifecycle, and stock before
 ordering. An LCSC number identifies the suggested source, not an electrical
 substitute class.
 
+Deferred Revision B work is tracked separately in
+[rev-b-deferred-changes.md](rev-b-deferred-changes.md). Revision A retains the
+parts and quantities in this BOM.
+
 ## Design choices
 
 - Buy components on cut tape; there are no charger or boost daughter boards.

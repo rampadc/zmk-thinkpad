@@ -249,7 +249,7 @@ Confirm the current directory:
 pwd
 ```
 
-The last part should be `/zmk-thinkpad`.
+The last part should be `zmk-thinkpad`.
 
 ### 1. Install the tools
 
