@@ -1,0 +1,45 @@
+/*
+ * Shared Logitech-style three-host Easy-Switch behavior.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/ {
+    macros {
+        ble_profile_select: ble_profile_select {
+            compatible = "zmk,behavior-macro-one-param";
+            #binding-cells = <1>;
+            wait-ms = <20>;
+            tap-ms = <20>;
+            bindings = <
+                &out OUT_BLE
+                &macro_param_1to2 &bt BT_SEL MACRO_PLACEHOLDER
+            >;
+        };
+
+        ble_profile_pair: ble_profile_pair {
+            compatible = "zmk,behavior-macro-one-param";
+            #binding-cells = <1>;
+            wait-ms = <20>;
+            tap-ms = <20>;
+            bindings = <
+                &out OUT_BLE
+                &macro_param_1to2 &bt BT_SEL MACRO_PLACEHOLDER
+                &bt BT_CLR
+                /* Force a profile-change event after clearing the active slot. */
+                &bt BT_NXT
+                &macro_param_1to2 &bt BT_SEL MACRO_PLACEHOLDER
+            >;
+        };
+    };
+
+    behaviors {
+        easy_switch: easy_switch {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "tap-preferred";
+            tapping-term-ms = <3000>;
+            bindings = <&ble_profile_pair>, <&ble_profile_select>;
+        };
+    };
+};

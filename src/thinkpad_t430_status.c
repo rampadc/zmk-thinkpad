@@ -43,7 +43,7 @@ static int last_profile = -1;
 static bool mute_on;
 static bool micmute_on;
 
-#define PROFILE_IDENTIFY_DURATION_MS 2500
+#define PROFILE_IDENTIFY_DURATION_MS 5000
 #define PROFILE_PAIRING_BLINK K_MSEC(150)
 #define PROFILE_DISCONNECTED_ON K_MSEC(120)
 #define PROFILE_DISCONNECTED_OFF K_MSEC(1880)

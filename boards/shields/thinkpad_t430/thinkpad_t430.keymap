@@ -4,6 +4,7 @@
 #include <dt-bindings/zmk/hid_usage.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
+#include "../thinkpad_common/ble_profiles.dtsi"
 
 #define BASE 0
 #define FN 1
@@ -15,27 +16,6 @@
     ZMK_HID_USAGE(HID_USAGE_CONSUMER, HID_USAGE_CONSUMER_AL_WIRELESS_STATUS)
 
 / {
-    macros {
-        /* Selecting a host also selects BLE, like a Logitech Easy-Switch key. */
-        ble_profile_1: ble_profile_1 {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&out OUT_BLE>, <&bt BT_SEL 0>;
-        };
-
-        ble_profile_2: ble_profile_2 {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&out OUT_BLE>, <&bt BT_SEL 1>;
-        };
-
-        ble_profile_3: ble_profile_3 {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&out OUT_BLE>, <&bt BT_SEL 2>;
-        };
-    };
-
     keymap {
         compatible = "zmk,keymap";
 
@@ -98,9 +78,9 @@
                 /* Fn+Delete clears only the selected BLE profile. */
                 &trans &bt BT_CLR &trans &trans &trans &trans
 
-                /* Fn+1/2/3 are BLE hosts; Fn+4 is the explicit USB target. */
+                /* Tap Fn+1/2/3 to switch; hold three seconds to pair. */
                 &trans
-                &ble_profile_1 &ble_profile_2 &ble_profile_3 &out OUT_USB
+                &easy_switch 0 0 &easy_switch 1 1 &easy_switch 2 2 &out OUT_USB
                 &trans &trans &trans &trans &trans &trans &trans &trans &trans
 
                 /* Fn+P=Pause. */

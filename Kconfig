@@ -16,3 +16,11 @@ menuconfig THINKPAD_T470_MATRIX_DISCOVERY
     help
       Guides the user through the US T470 layout and records each raw
       DRV/SENSE coordinate. Enable only when remapping another keyboard.
+
+menuconfig THINKPAD_T470_STATUS
+    bool "ThinkPad T470 BLE profile LEDs"
+    default y if SHIELD_THINKPAD_T470
+    depends on ZMK_BLE && ZMK_USB
+    help
+      Uses three nRF52840 DK LEDs to show selected BLE profile, pairing,
+      connection, and reconnection state.

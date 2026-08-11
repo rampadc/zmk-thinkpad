@@ -20,6 +20,24 @@ The T470 shield currently supports its complete 84-key US matrix, Fn media
 controls, USB output, and three BLE profiles. Its connector and Holyiot wiring
 plan is in [the T470 preliminary wiring guide](docs/t470/preliminary-pcb-wiring.md).
 
+## Three-host Easy-Switch controls
+
+Both keyboards use the same Logitech-style profile controls:
+
+| Control | Action |
+| --- | --- |
+| Tap Fn+1 / Fn+2 / Fn+3 | Select BLE host 1 / 2 / 3 |
+| Hold Fn+1 / Fn+2 / Fn+3 for three seconds | Clear that slot and advertise for pairing |
+| Fn+4 | Select USB output |
+
+For pairing, hold the desired shortcut until its LED starts blinking rapidly,
+then release it and pair from the host. A successful connection lights that
+profile LED for five seconds. Short presses subsequently switch between the
+three paired hosts. This follows the Logitech ERGO K860 Easy-Switch sequence.
+
+The T430 uses its three external profile LEDs. During T470 DK prototyping,
+onboard DK LED1, LED2, and LED3 represent profiles 1, 2, and 3 respectively.
+
 Planning the custom Holyiot board? Start with the
 [Holyiot preliminary PCB wiring and power plan](docs/preliminary-pcb-wiring.md). The
 Holyiot GPIO assignment is intentionally optimized for PCB routing and is
@@ -156,7 +174,8 @@ recovery controls even after the complete keyboard is connected.
 | --- | --- |
 | Power button | Toggle USB/BLE output |
 | Fn+Power | Advance to the next BLE host |
-| Fn+1 / Fn+2 / Fn+3 | Select and connect to BLE host 1 / 2 / 3 |
+| Tap Fn+1 / Fn+2 / Fn+3 | Select and connect to BLE host 1 / 2 / 3 |
+| Hold Fn+1 / Fn+2 / Fn+3 for three seconds | Clear that host slot and advertise for pairing |
 | Fn+4 | Select USB output |
 | Fn+Delete | Clear only the selected BLE profile and advertise for pairing |
 | Fn+Space | Cycle keyboard backlight through off, 50%, and 100% |
@@ -201,7 +220,7 @@ Only the currently selected profile LED is driven. The other two remain off:
 | --- | --- |
 | Fast blink | Selected profile is empty and advertising for pairing |
 | Short pulse every two seconds | Selected profile is bonded but disconnected |
-| Solid for 2.5 seconds | Profile was selected or has just connected |
+| Solid for 5 seconds | Profile was selected or has just connected |
 | Off after the solid indication | Selected profile remains connected, or USB is selected |
 
 The power-button LED continues to show the overall selected transport and

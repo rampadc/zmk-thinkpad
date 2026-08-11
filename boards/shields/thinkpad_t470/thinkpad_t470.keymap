@@ -3,6 +3,7 @@
 #include <dt-bindings/zmk/hid_usage.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
+#include "../thinkpad_common/ble_profiles.dtsi"
 
 #define BASE 0
 #define FN 1
@@ -53,16 +54,17 @@
         fn_layer {
             display-name = "Fn";
             bindings = <
-                /* Media, output selection, and three BLE profiles on F1-F12. */
+                /* Media and explicit USB/BLE output selection on F1-F8. */
                 &trans
                 &kp C_MUTE &kp C_VOL_DN &kp C_VOL_UP &kp C_MIC_MUTE
                 &kp C_BRI_DN &kp C_BRI_UP
                 &out OUT_USB &out OUT_BLE
-                &bt BT_SEL 0 &bt BT_SEL 1 &bt BT_SEL 2 &bt BT_CLR
+                &trans &trans &trans &trans
                 &trans &trans &trans &trans
 
                 &trans
-                &trans &trans &trans &trans &trans &trans &trans
+                &easy_switch 0 0 &easy_switch 1 1 &easy_switch 2 2
+                &out OUT_USB &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans
 
                 &trans

@@ -76,6 +76,22 @@
         };
     };
 
+    t470_profile_indicators: t470_profile_indicators {
+        compatible = "gpio-leds";
+
+        t470_profile_1_led: profile_1_led {
+            gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+        };
+
+        t470_profile_2_led: profile_2_led {
+            gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+        };
+
+        t470_profile_3_led: profile_3_led {
+            gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+        };
+    };
+
     t470_transform: t470_transform {
         compatible = "zmk,matrix-transform";
         columns = <8>;
