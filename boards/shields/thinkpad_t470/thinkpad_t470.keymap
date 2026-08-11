@@ -1,0 +1,26 @@
+#include <behaviors.dtsi>
+
+#define NONE_8 &none &none &none &none &none &none &none &none
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        /*
+         * One binding per raw coordinate: DRV0/SENSE0 through
+         * DRV15/SENSE7, followed by the separate Fn input. Keeping these
+         * inert prevents unknown coordinates from typing during discovery.
+         */
+        raw_matrix {
+            display-name = "Matrix discovery";
+            bindings = <
+                NONE_8 NONE_8 NONE_8 NONE_8
+                NONE_8 NONE_8 NONE_8 NONE_8
+                NONE_8 NONE_8 NONE_8 NONE_8
+                NONE_8 NONE_8 NONE_8 NONE_8
+                &none
+            >;
+        };
+    };
+};
+

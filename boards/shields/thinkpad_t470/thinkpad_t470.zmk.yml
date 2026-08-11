@@ -1,0 +1,8 @@
+file_format: "1"
+id: thinkpad_t470
+name: ThinkPad T470 Keyboard Matrix
+type: shield
+requires: [arduino_uno]
+features:
+  - keys
+

@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+
+menuconfig THINKPAD_T470_MATRIX_DISCOVERY
+    bool "ThinkPad T470 matrix discovery logging"
+    default y if SHIELD_THINKPAD_T470
+    depends on LOG
+    help
+      Logs each raw keyboard press and release as a DRV/SENSE coordinate and
+      identifies the separate HOTKEY input. Intended for initial matrix mapping.

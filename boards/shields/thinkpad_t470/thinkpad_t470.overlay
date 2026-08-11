@@ -1,0 +1,138 @@
+/*
+ * ThinkPad T470 keyboard matrix on the Nordic nRF52840 DK.
+ *
+ * The transform deliberately exposes the raw 16 x 8 scan matrix. Key-to-
+ * coordinate mapping can replace it after the matrix has been measured.
+ * TrackPoint, keyboard LEDs, and backlight are intentionally out of scope.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/pinctrl/nrf-pinctrl.h>
+
+#define RAW_ROW(r) \
+    RC(r, 0) RC(r, 1) RC(r, 2) RC(r, 3) \
+    RC(r, 4) RC(r, 5) RC(r, 6) RC(r, 7)
+
+/ {
+    chosen {
+        zmk,kscan = &kscan_composite;
+        zmk,matrix-transform = &raw_transform;
+    };
+
+    kscan_matrix: kscan_matrix {
+        compatible = "zmk,kscan-gpio-matrix";
+        wakeup-source;
+        diode-direction = "row2col";
+
+        /* DRV0 through DRV15, in order. */
+        row-gpios =
+            <&gpio1 3 GPIO_ACTIVE_LOW>,
+            <&gpio0 26 GPIO_ACTIVE_LOW>,
+            <&gpio1 9 GPIO_ACTIVE_LOW>,
+            <&gpio0 31 GPIO_ACTIVE_LOW>,
+            <&gpio1 10 GPIO_ACTIVE_LOW>,
+            <&gpio1 15 GPIO_ACTIVE_LOW>,
+            <&gpio0 29 GPIO_ACTIVE_LOW>,
+            <&gpio0 5 GPIO_ACTIVE_LOW>,
+            <&gpio0 2 GPIO_ACTIVE_LOW>,
+            <&gpio1 0 GPIO_ACTIVE_LOW>,
+            <&gpio1 8 GPIO_ACTIVE_LOW>,
+            <&gpio1 2 GPIO_ACTIVE_LOW>,
+            <&gpio1 7 GPIO_ACTIVE_LOW>,
+            <&gpio0 24 GPIO_ACTIVE_LOW>,
+            <&gpio1 6 GPIO_ACTIVE_LOW>,
+            <&gpio1 5 GPIO_ACTIVE_LOW>;
+
+        /* SENSE0 through SENSE7, in order. */
+        col-gpios =
+            <&gpio0 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 30 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 28 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio1 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 27 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    };
+
+    /* T470 -HOTKEY (Fn) is a separate active-low contact, not matrixed. */
+    kscan_fn: kscan_fn {
+        compatible = "zmk,kscan-gpio-direct";
+        wakeup-source;
+        input-gpios = <&gpio1 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+    };
+
+    kscan_composite: kscan_composite {
+        compatible = "zmk,kscan-composite";
+        wakeup-source;
+        rows = <17>;
+        columns = <8>;
+
+        matrix {
+            kscan = <&kscan_matrix>;
+        };
+
+        fn {
+            kscan = <&kscan_fn>;
+            row-offset = <16>;
+        };
+    };
+
+    raw_transform: raw_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <8>;
+        rows = <17>;
+        map = <
+            RAW_ROW(0)  RAW_ROW(1)  RAW_ROW(2)  RAW_ROW(3)
+            RAW_ROW(4)  RAW_ROW(5)  RAW_ROW(6)  RAW_ROW(7)
+            RAW_ROW(8)  RAW_ROW(9)  RAW_ROW(10) RAW_ROW(11)
+            RAW_ROW(12) RAW_ROW(13) RAW_ROW(14) RAW_ROW(15)
+            RC(16, 0)
+        >;
+    };
+};
+
+&pinctrl {
+    uart0_t470_default: uart0_t470_default {
+        group1 {
+            psels = <NRF_PSEL(UART_TX, 0, 6)>;
+        };
+
+        group2 {
+            psels = <NRF_PSEL(UART_RX, 0, 8)>;
+            bias-pull-up;
+        };
+    };
+
+    uart0_t470_sleep: uart0_t470_sleep {
+        group1 {
+            psels = <NRF_PSEL(UART_TX, 0, 6)>,
+                    <NRF_PSEL(UART_RX, 0, 8)>;
+            low-power-enable;
+        };
+    };
+};
+
+&uart0 {
+    pinctrl-0 = <&uart0_t470_default>;
+    pinctrl-1 = <&uart0_t470_sleep>;
+    pinctrl-names = "default", "sleep";
+};
+
+/* The DK's onboard QSPI flash remains physically connected to P0.17/P0.19-23. */
+&qspi {
+    status = "disabled";
+};
+
+/* DRV1/SENSE7 use P0.26/P0.27, normally assigned to Arduino I2C. */
+&arduino_i2c {
+    status = "disabled";
+};
+
+/* DRV10 uses P1.08, normally SPI1 MISO in the board defaults. */
+&spi1 {
+    status = "disabled";
+};
