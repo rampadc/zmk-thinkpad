@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MIT
+
+description: ThinkPad USB and BLE profile command behavior
+compatible: "zmk,behavior-thinkpad-profile-command"
+include: two_param.yaml

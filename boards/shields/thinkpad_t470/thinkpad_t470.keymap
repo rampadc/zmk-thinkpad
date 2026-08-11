@@ -64,7 +64,7 @@
 
                 &trans
                 &easy_switch 0 0 &easy_switch 1 1 &easy_switch 2 2
-                &out OUT_USB &trans &trans &trans
+                &tp_profile THINKPAD_PROFILE_USB 0 &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans
 
                 &trans
