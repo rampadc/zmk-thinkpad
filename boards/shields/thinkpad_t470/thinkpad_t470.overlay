@@ -21,6 +21,7 @@
         compatible = "zmk,kscan-gpio-matrix";
         wakeup-source;
         diode-direction = "row2col";
+        debounce-scan-period-ms = <5>;
 
         /* DRV0 through DRV15, in order. */
         row-gpios =
@@ -44,7 +45,7 @@
         /* SENSE0 through SENSE7, in order. */
         col-gpios =
             <&gpio0 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
-            <&gpio0 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
             <&gpio0 30 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
             <&gpio0 28 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
             <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
@@ -57,6 +58,7 @@
     kscan_fn: kscan_fn {
         compatible = "zmk,kscan-gpio-direct";
         wakeup-source;
+        debounce-scan-period-ms = <5>;
         input-gpios = <&gpio1 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
     };
 

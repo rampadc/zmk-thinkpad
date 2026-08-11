@@ -47,7 +47,7 @@ GPIO for every T470-specific signal.
 | 5 | 36 | SENSE6 | 17 | P0.12 | Active-low input, internal pull-up |
 | 6 | 35 | DRV14 | 34 | P1.06 | Matrix output |
 | 7 | 34 | SENSE4 | 12 | P0.04 | Active-low input, internal pull-up |
-| 8 | 33 | SENSE1 | 15 | P0.07 | Active-low input, internal pull-up |
+| 8 | 33 | SENSE1 | 40 | P0.25 | Active-low input, internal pull-up |
 | 9 | 32 | DRV0 | 28 | P1.03 | Matrix output |
 | 10 | 31 | SENSE2 | 10 | P0.30 | Active-low input, internal pull-up |
 | 11 | 30 | SENSE0 | 6 | P0.03 | Active-low input, internal pull-up |
@@ -107,7 +107,7 @@ are used for the matrix.
 | 36 | SENSE6 | P0.12 |
 | 35 | DRV14 | P1.06 |
 | 34 | SENSE4 | P0.04 |
-| 33 | SENSE1 | P0.07 |
+| 33 | SENSE1 | P0.25 |
 | 32 | DRV0 | P1.03 |
 | 31 | SENSE2 | P0.30 |
 | 30 | SENSE0 | P0.03 |
@@ -266,7 +266,7 @@ Holyiot P1.14 <-- configurable input -------- J37 pin 12 detect
 | 31-32 | SWDCLK, SWDIO | Tag-Connect programming footprint |
 | 35-36 | P0.09, P0.10 | Spare/test pads; require NFC-as-GPIO configuration |
 | 39 | P1.12 | Backlight 5 V enable |
-| 40-42 | P0.25, P0.11, P1.08 | Optional BLE profile LEDs 1-3, active-low |
+| 41-42, 55 | P0.11, P1.08, P0.16 | Optional BLE profile LEDs 1-3, active-low |
 | 43-46 | P0.27, P0.08, P0.06, P0.26 | Spare/test pads |
 | 55 | P0.16 | Spare/test pad |
 
