@@ -46,6 +46,10 @@ The selected output and BLE profile are retained across resets. To pair a
 device, select one of the three profiles, select BLE output, and pair with the
 advertised ZMK keyboard from the host.
 
+The matrix drive pins use open-drain outputs. This is required for combinations
+whose keys share a sense line, such as left Shift+T; inactive drive rows must
+float rather than drive the shared sense line high.
+
 ## Optional matrix rediscovery
 
 The discovery helper remains available if another T470 keyboard needs to be
