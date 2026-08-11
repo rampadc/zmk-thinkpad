@@ -3,3 +3,6 @@ include:
   - board: nrf52840dk_nrf52840
     shield: thinkpad_t430
     artifact-name: thinkpad_t430
+  - board: nrf52840dk_nrf52840
+    shield: thinkpad_t470
+    artifact-name: thinkpad_t470

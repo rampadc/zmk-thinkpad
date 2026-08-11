@@ -8,3 +8,11 @@ menuconfig THINKPAD_T430_STATUS
       Drives the T430 power-button LED with USB/BLE connection status, drives
       three BLE-profile indicators, and mirrors the dedicated
       speaker/microphone mute buttons to their LEDs.
+
+menuconfig THINKPAD_T470_MATRIX_DISCOVERY
+    bool "ThinkPad T470 matrix discovery logging"
+    default n
+    depends on LOG
+    help
+      Guides the user through the US T470 layout and records each raw
+      DRV/SENSE coordinate. Enable only when remapping another keyboard.

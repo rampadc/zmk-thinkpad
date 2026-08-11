@@ -1,10 +1,8 @@
 file_format: "1"
-id: thinkpad_t430
-name: ThinkPad T430 Keyboard and TrackPoint
+id: thinkpad_t470
+name: ThinkPad T470 Keyboard Matrix
 type: shield
 url: https://github.com/rampadc/zmk-thinkpad
 requires: [arduino_uno]
 features:
   - keys
-  - pointer
-  - backlight

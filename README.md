@@ -1,7 +1,10 @@
-# ThinkPad T430 ZMK firmware
+# ThinkPad T430 and T470 ZMK firmware
 
-This repository turns a ThinkPad T430 keyboard and TrackPoint into a USB and
-Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
+This repository contains separate ZMK shields for ThinkPad T430 and T470
+keyboards. Both support USB and three-profile Bluetooth operation on the Nordic
+nRF52840. Select `thinkpad_t430` or `thinkpad_t470` when building.
+
+The T430 shield currently supports:
 
 - the complete US QWERTY keyboard matrix, Fn key, power button, and dedicated
   media buttons;
@@ -12,6 +15,10 @@ Bluetooth keyboard using a Nordic nRF52840 DK. It currently supports:
 - the power-button LED for connection state; and
 - the speaker-mute and microphone-mute LEDs; and
 - three low-power BLE-profile indicator LEDs.
+
+The T470 shield currently supports its complete 84-key US matrix, Fn media
+controls, USB output, and three BLE profiles. Its connector and Holyiot wiring
+plan is in [the T470 preliminary wiring guide](docs/t470/preliminary-pcb-wiring.md).
 
 Planning the custom Holyiot board? Start with the
 [Holyiot preliminary PCB wiring and power plan](docs/preliminary-pcb-wiring.md). The
@@ -204,7 +211,7 @@ without leaving another LED continuously lit.
 ## Build locally
 
 Run every command below from the repository root: the directory named
-`zmk-config-t430`. The blocks which need `.zmk` use a temporary subshell, so
+`zmk-thinkpad`. The blocks which need `.zmk` use a temporary subshell, so
 your terminal returns to the repository root automatically.
 
 > Copy only the text inside each command box. Do not paste the three backtick
@@ -223,7 +230,7 @@ Confirm the current directory:
 pwd
 ```
 
-The last part should be `/zmk-config-t430`.
+The last part should be `/zmk-thinkpad`.
 
 ### 1. Install the tools
 
@@ -235,7 +242,7 @@ brew install git python cmake ninja west arm-none-eabi-gcc
 
 ### 2. Set up ZMK (first time only)
 
-Run this complete block from `zmk-config-t430`:
+Run this complete block from `zmk-thinkpad`:
 
 ```sh
 mkdir -p .zmk/config
@@ -262,7 +269,7 @@ or `already initialized` usually means that step was completed previously.
 
 ### 3. Build the firmware
 
-Run this complete block from `zmk-config-t430`:
+Run this complete block from `zmk-thinkpad`:
 
 ```sh
 (
@@ -270,7 +277,7 @@ Run this complete block from `zmk-config-t430`:
   . .venv/bin/activate
   ZEPHYR_TOOLCHAIN_VARIANT=cross-compile \
   CROSS_COMPILE="$(brew --prefix)/bin/arm-none-eabi-" \
-  west build -p always -s zmk/app -d build/thinkpad_t430 \
+  .venv/bin/python -m west build -p always -s zmk/app -d build/thinkpad_t430 \
     -b nrf52840dk_nrf52840 -- \
     -DSHIELD=thinkpad_t430 \
     -DZMK_CONFIG="$PWD/../config" \
@@ -293,11 +300,15 @@ The simplest flashing method is drag-and-drop through the DK debugger:
 
 1. Connect the DK's interface/debug USB port to the Mac.
 2. Wait for a drive named `JLINK`.
-3. From `zmk-config-t430`, run:
+3. From `zmk-thinkpad`, run:
 
 ```sh
 cp .zmk/build/thinkpad_t430/zephyr/zmk.hex /Volumes/JLINK/
 ```
+
+For the T470, replace both occurrences of `thinkpad_t430` in the build command
+with `thinkpad_t470`. Its output is
+`.zmk/build/thinkpad_t470/zephyr/zmk.hex`.
 
 The drive can disconnect and reconnect while programming. That is normal.
 

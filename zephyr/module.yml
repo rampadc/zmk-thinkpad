@@ -1,4 +1,4 @@
-name: thinkpad_t430
+name: thinkpad
 
 build:
   cmake: .
