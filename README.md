@@ -33,7 +33,18 @@ west build -s .zmk/zmk/app -d .zmk/build/thinkpad_t470 -b nrf52840dk_nrf52840 --
 
 The default firmware is ready for normal typing. Holding Fn provides the
 ThinkPad media functions on F1 through F6: mute, volume down/up, microphone
-mute, and brightness down/up.
+mute, and brightness down/up. It also provides transport and BLE-profile
+controls:
+
+- Fn+F7 selects USB output.
+- Fn+F8 selects BLE output.
+- Fn+F9, Fn+F10, and Fn+F11 select BLE profiles 1, 2, and 3.
+- Fn+F12 clears the bond for the currently selected BLE profile so it can be
+  paired again.
+
+The selected output and BLE profile are retained across resets. To pair a
+device, select one of the three profiles, select BLE output, and pair with the
+advertised ZMK keyboard from the host.
 
 ## Optional matrix rediscovery
 
