@@ -37,8 +37,9 @@ physical layout and bindings.
 
 ## Scan the matrix on the nRF52840 DK
 
-The discovery build logs every matrix transition without sending a key to the
-host. Flash this file through the DK's `JLINK` drive:
+The discovery build guides you through all 84 keys on a US T470 keyboard
+without sending keys to the host. Flash this file through the DK's `JLINK`
+drive:
 
 ```sh
 cp .zmk/build/thinkpad_t470/zephyr/zmk.hex /Volumes/JLINK/
@@ -52,14 +53,16 @@ ls /dev/cu.usbmodem*
 screen /dev/cu.usbmodemXXXX 115200
 ```
 
-Replace `XXXX` with the actual suffix. Pressing a matrix key produces lines
-like:
+Replace `XXXX` with the actual suffix. After boot, the UART prompts for one
+physical key at a time:
 
 ```text
-T470_SCAN PRESS DRV3 SENSE6 position=30
-T470_SCAN RELEASE DRV3 SENSE6 position=30
+T470_GUIDE [1/84] PRESS ESC
+T470_GUIDE CAPTURED ESC = DRV3 SENSE6 position=30
+T470_GUIDE [2/84] PRESS F1
 ```
 
-The separate Fn contact produces `T470_SCAN PRESS HOTKEY position=128`. Record
-one coordinate per physical key. To leave `screen`, press Control-A, then K,
-then Y.
+Press and release the requested key; the next prompt appears automatically.
+Duplicate coordinates are rejected. After the last key, the firmware prints a
+complete `T470_MAP_BEGIN` through `T470_MAP_END` summary. Reset the DK to restart
+the sequence. To leave `screen`, press Control-A, then K, then Y.

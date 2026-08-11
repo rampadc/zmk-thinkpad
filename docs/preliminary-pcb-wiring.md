@@ -133,8 +133,9 @@ are used for the matrix.
 
 Leave the LED, NC, and TrackPoint-button breakout pins disconnected during
 matrix discovery. SENSE and `HOTKEY` inputs are active-low with internal
-pull-ups. The firmware reports each press and release as `DRVn`/`SENSEn` over
-the DK's J-Link UART at 115200 baud.
+pull-ups. The firmware prompts for all 84 keys in physical US-layout order and
+reports each captured `DRVn`/`SENSEn` coordinate over the DK's J-Link UART at
+115200 baud. It prints the complete map after the final key.
 
 The DK and Holyiot use the same matrix and `HOTKEY` GPIOs in this guide.
 
