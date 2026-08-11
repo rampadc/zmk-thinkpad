@@ -19,11 +19,11 @@ identify procurement entries; they do not make same-named parts interchangeable.
 | Boost inductor | cjiang FXL0420-1R5-M | [cjiang-fxl0420-1r5-m.pdf](cjiang-fxl0420-1r5-m.pdf) |
 | USB-C receptacle | Korean Hroparts TYPE-C-31-M-12 | [hroparts-type-c-31-m-12.pdf](hroparts-type-c-31-m-12.pdf) |
 | Momentary hardware-reset switch | SHOU HAN TS24CA | [shou-han-ts24ca.pdf](shou-han-ts24ca.pdf) |
-| BLE profile LEDs | Hubei KENTO KT-0603R | [kento-kt-0603r.pdf](kento-kt-0603r.pdf) |
+| BLE profile LEDs | NATIONSTAR NCD0805O1 | [nationstar-ncd0805o1.pdf](nationstar-ncd0805o1.pdf) |
 | Reverse-battery clamp | MDD SS34 | [mdd-ss34.pdf](mdd-ss34.pdf) |
 | Small-signal N-MOSFET | Yangjie BSS138 | [yangjie-bss138.pdf](yangjie-bss138.pdf) |
 | System and backlight high-side P-MOSFETs | Yangjie YJL3401A | [yangjie-yjl3401a.pdf](yangjie-yjl3401a.pdf) |
-| Battery fault fuse | Littelfuse 0470002.DRSNP | [littelfuse-0470002-drsnp.pdf](littelfuse-0470002-drsnp.pdf) |
+| Battery fault fuse | Littelfuse 0466002.NRHF | [littelfuse-0466002-nrhf.pdf](littelfuse-0466002-nrhf.pdf) |
 | USB VBUS PTC | LUTE 1206L100/16NR | [lute-1206l100-16nr.pdf](lute-1206l100-16nr.pdf) |
 | Battery connector | JST S2B-PH-SM4-TB(LF)(SN) | [jst-ph-series.pdf](jst-ph-series.pdf) |
 | Programming footprint | Tag-Connect TC2050-IDC-NL | [tag-connect-tc2050-idc-nl-footprint.pdf](tag-connect-tc2050-idc-nl-footprint.pdf) |

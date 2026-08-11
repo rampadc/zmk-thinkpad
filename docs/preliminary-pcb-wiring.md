@@ -53,11 +53,11 @@ not 5 V tolerant.
 
 | Rail or signal group | Voltage | Notes |
 | --- | ---: | --- |
-| Holyiot `VDD-nRF`, module pad 14 | 3.0 V nominal | Never connect directly to USB or 5 V |
+| `VCC` at Holyiot `VDD-nRF`, module pad 14 | 3.0 V nominal | Never connect directly to USB or `+5V` |
 | T430 J7 pin 35 | 3.0 V nominal | Original rail was 3.3 V; supplies the indicator LEDs |
 | T430 J7 pins 29 and 31 | 5 V | Keyboard backlight supply |
 | T430 J7 pin 38 | 5 V | TrackPoint supply |
-| T430 J7 pins 34 and 41-44 | Ground | Join to one solid PCB ground system |
+| T430 J7 pins 27, 34, and 41-44 | Ground | Join all six contacts to one solid PCB ground system |
 | `KBD_BL_PWM` | 3.0 V logic | Original EC used 3.3 V; never translate it to 5 V |
 | TrackPoint DATA/CLOCK/RESET | 5 V open-collector side | Requires translation/isolation |
 
@@ -151,13 +151,17 @@ Reserved module connections:
 | 31 | SWDCLK | TC2050 programming footprint |
 | 32 | SWDIO | TC2050 programming footprint |
 | 38 | P1.14 | Spare/test pad; USB input current is fixed by SY6280 hardware |
-| 39 | P1.12 | `BL_5V_EN`, active-high drive for the BSS138/P-MOS backlight switch |
-| 40 | P0.25 | `BLE_PROFILE_1_LED`, active-low current sink |
-| 41 | P0.11 | `BLE_PROFILE_2_LED`, active-low current sink |
-| 42 | P1.08 | `BLE_PROFILE_3_LED`, active-low current sink |
-| 43-46, 55 | Spare GPIOs | Test pads or future expansion |
+| 39 | P1.12 | `NRF_BL_ENABLE`, active-high drive for the BSS138/P-MOS backlight switch |
+| 40 | P0.25 | `BLE_PROFILE_LED_1`, active-low current sink |
+| 41 | P0.11 | `BLE_PROFILE_LED_2`, active-low current sink |
+| 42 | P1.08 | `BLE_PROFILE_LED_3`, active-low current sink |
+| 35-36, 43-46, 55 | Spare GPIOs | Test pads or future expansion; pads 35-36 are P0.09/P0.10 and are not used for NFC |
 
-P0.09 and P0.10 remain reserved for NFC and are not needed by this design.
+This design does not support NFC. Holyiot pads 35 and 36 expose P0.09 and
+P0.10 as spare GPIOs alongside pads 43-46 and 55. They may remain unconnected
+or reach labeled test pads. Before assigning either pin in firmware, enable
+`CONFIG_NFCT_PINS_AS_GPIOS=y` so the nRF52840 configures them as digital I/O
+instead of its default NFC function.
 
 ## Internal pull-up policy
 
@@ -166,7 +170,7 @@ The firmware must explicitly configure internal nRF pull-ups on:
 - `SENSE0` through `SENSE7`;
 - Fn (`-HOTKEY`);
 - the power button (`-PWRSWITCH`); and
-- the 3.0 V sides of TrackPoint DATA and CLOCK.
+- the `VCC` sides of TrackPoint DATA and CLOCK.
 
 Do not place external pull-up resistors on these nRF GPIOs. Matrix `DRV` lines,
 PWM, reset-drive, and LED-drive pins are outputs and do not need pull-ups.
@@ -185,16 +189,16 @@ open-collector arrangement:
 ```text
                           4.7 kΩ
                             │
-                           +5 V
+                           +5V
                             │
 nRF GPIO ── source  BSS138  drain ── J7 DATA or CLOCK
  internal       gate │
- pull-up             └────────────── 3.0 V
+ pull-up             └────────────── VCC
 ```
 
-- BSS138 source: 3.0 V/nRF side.
+- BSS138 source: `VCC`/nRF side.
 - BSS138 drain: 5 V/TrackPoint side.
-- BSS138 gate: 3.0 V.
+- BSS138 gate: `VCC`.
 - High-side pull-up: 4.7 kΩ to 5 V on each signal.
 - Low-side pull-up: nRF internal pull-up only.
 - Place both MOSFETs and their high-side resistors close to J7 pins 37 and 39.
@@ -262,14 +266,14 @@ active-low direct-drive semantics.
 
 ### BLE-profile indicator LEDs
 
-Place three adjacent 0603 LEDs where they are visible to the user and label
+Place three adjacent 0805 top-view LEDs where they are visible to the user and label
 them `1`, `2`, and `3` on the silkscreen. Consecutive Holyiot pads 40-42 keep
 their routes parallel and avoid crossing the matrix fan-out.
 
 Use a direct, active-low connection for each LED:
 
 ```text
-3V0 ── 4.7 kΩ ── LED anode
+VCC ── 4.7 kΩ ── LED anode
                       LED cathode ── Holyiot GPIO
 ```
 
@@ -279,12 +283,18 @@ Use a direct, active-low connection for each LED:
 | 2 | 41 | P0.11 | Selected BLE profile 2 |
 | 3 | 42 | P1.08 | Selected BLE profile 3 |
 
-- Use high-efficiency amber LEDs with 4.7 kOhm initial series resistors. Red is
-  an acceptable substitute; do not fit green, blue, or white LEDs. Keep
-  footprints compatible with 2.2-10 kOhm for brightness tuning.
+- Use NATIONSTAR NCD0805O1 orange LEDs (`C84262`) with 4.7 kOhm initial series
+  resistors. Do not substitute white LEDs on the 3.0 V rail without rechecking
+  forward-voltage headroom and resistor values. Keep footprints compatible
+  with 2.2-10 kOhm for brightness tuning.
 - Do not use BSS138s, 5 V, or external pull resistors on these lines.
 - A GPIO low turns its LED on; a GPIO high or high-impedance state leaves it
   off. The Holyiot devicetree must therefore mark all three as active-low.
+- If the PCB sits below an opaque enclosure surface, align an optional 2.5 mm
+  end-glow PMMA light pipe over each LED. Keep its polished input end centered
+  within 0.5 mm of the LED, lightly frost the visible end, and isolate adjacent
+  LEDs with opaque wells. Measure the purchased pipe before fixing the case-hole
+  diameter.
 - Fast blink means the selected profile is empty and advertising. A 120 ms
   pulse every two seconds means it is bonded but disconnected. Solid for 2.5
   seconds identifies a newly selected or newly connected profile, then turns
@@ -317,10 +327,10 @@ Holyiot P1.12 ── 1 kΩ ── BSS138 gate
                              GND
 
                        100 kΩ
-5V_SYS ────────────────/\/\/──┐
++5V ────────────────/\/\/──┐
                               │
                     10 nF     │       YJL3401A P-MOS
-5V_SYS ──────────────||────── gate ─── source: 5V_SYS
++5V ──────────────||────── gate ─── source: +5V
                               │         drain
                          BSS138 drain     │
                          source: GND      └── BL_5V ── J7 pins 29 and 31
@@ -339,8 +349,8 @@ Holyiot P1.12 ── 1 kΩ ── BSS138 gate
   gate to source as a preliminary slew capacitor and tune it after measuring
   inrush. Do not claim a precise rise time until the MOSFET gate charge and
   assembled load have been measured.
-- Firmware must assert `BL_5V_EN` before generating nonzero PWM, wait at least
-  35 ms, and set PWM to zero before deasserting `BL_5V_EN`.
+- Firmware must assert `NRF_BL_ENABLE` before generating nonzero PWM, wait at
+  least 35 ms, and set PWM to zero before deasserting `NRF_BL_ENABLE`.
 - The known T430 assembly makes `-KBD_BL_DTCT` on J7 pin 21 unnecessary; leave
   it unconnected unless automatic keyboard-type detection is added later.
 
@@ -422,7 +432,7 @@ Wire the target footprint one-to-one with Nordic P19:
 | 6 | SWO | Leave unconnected; RTT does not use SWO |
 | 7 | NC | Leave unconnected |
 | 8 | NC | Leave unconnected |
-| 9 | NC | Leave unconnected |
+| 9 | GNDDetect | Ground; lets the debugger detect a valid target-ground connection |
 | 10 | `SWD0_RESET` | Holyiot pad 21, P0.18/nRESET |
 
 Nordic documents the P19 selection and power behavior in
@@ -474,9 +484,9 @@ the schematic, PCB, test pads, and bring-up notes:
 | `USB_5V_LIM` | SY6280AAC U4 output | ETA6002 U1 input | Approximately 453 mA nominal limit |
 | `VSYS` | ETA6002 SYS output, supplemented by battery | YJL3401A system high-side P-MOSF | Approximately 3.6-4.5 V while USB-powered; tracks battery through the power path otherwise |
 | `VSYS_SW` | System high-side P-MOSF output | ME6211 U2 and SY7069 U3 | Switched system supply; rated for at least 1.2 A |
-| `3V0` | ME6211C30 U2 from `VSYS_SW` | Holyiot VDD, keyboard logic/LED rail, low sides of translators | Regulated 3.0 V |
-| `5V_SYS` | SY7069ADC U3 from `VSYS_SW` | TrackPoint branch and backlight switch input | Approximately 4.96 V nominal; validate on the first board |
-| `BL_5V` | YJL3401A Q8 | J7 pins 29 and 31 | Switched `5V_SYS`; normally off |
+| `VCC` | ME6211C30 U2 from `VSYS_SW` | Holyiot VDD, keyboard logic/LED rail, low sides of translators | Regulated 3.0 V |
+| `+5V` | SY7069ADC U3 from `VSYS_SW` | TrackPoint branch and backlight switch input | Approximately 4.96 V nominal; validate on the first board |
+| `BL_5V` | YJL3401A Q8 | J7 pins 29 and 31 | Switched `+5V`; normally off |
 
 ```text
                                       ┌── Holyiot pad 22: VBUS detect only
@@ -485,11 +495,11 @@ USB-C VBUS ─ F1 ─┬─ USB_VBUS_RAW
                                       └── SY6280AAC, ~453 mA limit ─ USB_5V_LIM
                                                                           │
                                                                           v
-Protected 1S LiPo ─ J3 ─ F2 ─ BAT_PROTECTED ─ LNK_BAT ─ BATT ┌──────────┐ SYS ─ VSYS ─ system P-MOS ─ VSYS_SW ─┬── ME6211C30 ─ 3V0
+Protected 1S LiPo ─ J3 ─ F2 ─ BAT_PROTECTED ─ LNK_BAT ─ BATT ┌──────────┐ SYS ─ VSYS ─ system P-MOS ─ VSYS_SW ─┬── ME6211C30 ─ VCC
                                   │                           │ ETA6002  │                            │                  ├─ Holyiot VDD
                              D6 cathode                        │ charger  │                            │                  └─ keyboard logic/LEDs
                                   │                            │ + power  │                            │
-                            D6 anode: GND                      │   path   │                            └── SY7069 ─ 5V_SYS ─┬─ TrackPoint
+                            D6 anode: GND                      │   path   │                            └── SY7069 ─ +5V ─┬─ TrackPoint
 USB_5V_LIM ─────────────────────────────────────────────── IN │          │                                                 └─ YJL3401A ─ BL_5V ─ backlight
                                                               └──────────┘
 ```
@@ -502,7 +512,7 @@ reference.
 
 | State | Power flow | Required behavior |
 | --- | --- | --- |
-| USB absent, battery present | `BAT -> ETA6002 power path -> VSYS` | With the latch on, 3V0 and 5V_SYS operate from the cell; backlight remains independently switchable |
+| USB absent, battery present | `BAT -> ETA6002 power path -> VSYS` | With the latch on, VCC and +5V operate from the cell; backlight remains independently switchable |
 | USB present, battery present | `USB_VBUS_RAW -> SY6280 -> ETA6002`; battery charges or supplements VSYS | Total USB draw is limited near 453 mA; battery supplies load beyond the available USB input budget |
 | USB present, battery absent/dead | USB supplies ETA6002 VSYS instant-on path | Logic should boot; maximum 5 V/backlight load is constrained by U4 and converter losses |
 | Both absent | No powered rail | No rail may be held up through GPIO, USB data, SWD, or protection-diode backfeed |
@@ -532,7 +542,7 @@ disable off-state charging. Do not add an LC network: there is no inductive
 latch load, and an underdamped LC can create the ringing it is intended to
 prevent.
 
-`USB_VBUS_RAW` must not be joined to `5V_SYS`. The former indicates an actual
+`USB_VBUS_RAW` must not be joined to `+5V`. The former indicates an actual
 host cable and feeds the charger; the latter is a locally boosted battery/SYS
 rail. This separation lets firmware distinguish USB attachment and prevents
 the boost converter from falsely asserting VBUS.
@@ -615,23 +625,23 @@ while USB remains capped by the SY6280. Validate approximately 196 mA charge
 current because the ETA6002 data sheet only characterizes higher example
 currents explicitly.
 
-### Nominal 3.0 V logic distribution
+### VCC logic distribution (nominal 3.0 V)
 
-ME6211C30M5G-N generates `3V0` from `VSYS_SW`:
+ME6211C30M5G-N generates `VCC` from `VSYS_SW`:
 
 - 1 uF input and output capacitors immediately beside U2;
 - EN pulled high to VSYS with a 100 kOhm array element unless a later power
   sequencing requirement is demonstrated;
-- feed Holyiot VDD/module pad 14, T430 J7 pin 35, profile LEDs, and the 3.0 V
+- feed Holyiot VDD/module pad 14, T430 J7 pin 35, profile LEDs, and the `VCC`
   translator gates from this rail; and
-- provide `LNK_3V0` so all logic-rail current can be measured.
+- provide `LNK_VCC` so all logic-rail current can be measured.
 
 The expected logic load is far below the regulator's 500 mA headline rating.
 Test output droop and BLE radio transients down to the intended battery cutoff.
 
 ### Regulated 5 V distribution
 
-SY7069ADC generates `5V_SYS` from `VSYS_SW`:
+SY7069ADC generates `+5V` from `VSYS_SW`:
 
 - tie EN to `VSYS_SW`, so the system high-side switch controls the converter and its shutdown output
   disconnect prevents the 5 V rail from being held up through U3;
@@ -650,14 +660,14 @@ the assembled PCB passes load, startup, ripple, and thermal tests from a 3.2 V
 input. Its data sheet shows operation at 500 mA and 1 A from 3 V, but does not
 guarantee either as a production output-current rating.
 
-Split `5V_SYS` into two measured branches:
+Split `+5V` into two measured branches:
 
 ```text
-5V_SYS ── LNK_TP ── TP_5V ───────────── J7 pin 38 TrackPoint
++5V ── LNK_TP ── TP_5V ───────────── J7 pin 38 TrackPoint
        └─ LNK_BL ── Q8 P-MOS ── BL_5V ─ J7 pins 29 and 31 backlight
 ```
 
-The TrackPoint branch remains powered whenever 5V_SYS is enabled. Q8 provides
+The TrackPoint branch remains powered whenever +5V is enabled. Q8 provides
 high-side backlight supply gating; `KBD_BL_PWM` remains the independent 3.0 V
 brightness-control signal.
 
@@ -713,15 +723,15 @@ Add labeled removable links and test pads so the Power Profiler Kit II (PPK2)
 can be inserted without cutting PCB traces:
 
 ```text
-5V_SYS -- LNK_TP -- TP_5V  -------- J7 pin 38
++5V -- LNK_TP -- TP_5V  -------- J7 pin 38
        `- LNK_BL -- Q8 -- BL_5V  -- J7 pins 29 and 31
 
 BAT_RAW+ -- F2/D6 protection -- BAT_PROTECTED -- LNK_BAT -- ETA6002 BATT
-3V0    -- LNK_3V0 -- Holyiot and keyboard-logic/LED branch
+VCC    -- LNK_VCC -- Holyiot and keyboard-logic/LED branch
 ```
 
 - Use an 0805 0 Ohm link or a solder-bridge-plus-test-pad arrangement for
-  `LNK_TP`, `LNK_BL`, and `LNK_3V0`.
+  `LNK_TP`, `LNK_BL`, and `LNK_VCC`.
 - Make `LNK_BAT` and its pads suitable for at least 1.5 A and for attaching
   probes without stressing a small passive footprint.
 - Put a ground test pad beside each measurement pair.
@@ -743,7 +753,7 @@ mode, and 600 mA continuous in source mode. Use it as follows:
 3. Use a PPK2 digital input on `TP4_RESET`, or on a temporary firmware marker
    GPIO, to align reset/initialization events with current peaks. Continue to
    use the Saleae for detailed PS/2 DATA/CLOCK decoding.
-4. **3.0 V subsystem:** open `LNK_3V0` and profile the release firmware at 3.0 V
+4. **3.0 V subsystem:** open `LNK_VCC` and profile the release firmware at 3.0 V
    during advertising, BLE connected idle, typing, TrackPoint reporting, and
    USB-suspended idle. Compare it with the debug build so logging overhead is
    not mistaken for product consumption.
@@ -901,7 +911,7 @@ guaranteed recovery path.
 - [ ] TrackPoint low side relies on internal pull-ups; high side has 4.7 kΩ.
 - [ ] Seven Yangjie BSS138 footprints fitted with correct source/drain orientation.
 - [ ] LED current-limit and MOSFET gate pull-down resistors fitted.
-- [ ] Three profile LEDs are labeled 1-3 and route through 4.7 kΩ from `3V0`
+- [ ] Three profile LEDs are labeled 1-3 and route through 4.7 kΩ from `VCC`
       to active-low P0.25, P0.11, and P1.08 respectively.
 - [ ] `KBD_BL_PWM` is a direct 0-3.0 V push-pull signal with no series resistor,
       external pull-down, BSS138, or 5 V pull-up.
@@ -918,9 +928,10 @@ guaranteed recovery path.
       pull-up, uses the preliminary 10 nF slew capacitor, and is driven by a
       BSS138 from P1.12 separately from the P1.04 brightness PWM.
 - [ ] SWDIO, SWDCLK, reset, target VDD, and ground reach the TC2050 footprint.
-- [ ] TC2050 pad 3 is grounded so DK P19 selects the external target.
+- [ ] TC2050 pad 3 is grounded so DK P19 selects the external target, and pad
+      9 (`GNDDetect`) is also grounded.
 - [ ] Reset button and accessible VDD/GND test points included.
-- [ ] `LNK_TP`, `LNK_BL`, `LNK_3V0`, and high-current `LNK_BAT` measurement
+- [ ] `LNK_TP`, `LNK_BL`, `LNK_VCC`, and high-current `LNK_BAT` measurement
       points included and labeled, each with a nearby ground point.
 - [ ] Holyiot operation, matrix scanning, LEDs, USB, and BLE are validated on
       the nominal 3.0 V rail down to the intended low-battery endpoint.

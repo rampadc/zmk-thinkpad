@@ -85,12 +85,12 @@ purchase.
 | USB current limiter | 1 | 5 | Silergy [`SY6280AAC`](datasheets/sy6280aac.pdf), `C55136` | SOT-23-5 | Programmable VBUS current limiter with reverse blocking and output discharge |
 | USB data ESD protector | 1 | 10 | TECH PUBLIC [`USBLC6-2SC6`](datasheets/tech-public-usblc6-2sc6.pdf), `C2827654` | SOT-23-6 | Two-channel 5 V USB 2.0 ESD protection; verify footprint against its drawing |
 | VBUS TVS | 1 | 5 | Nexperia [`PTVS5V0S1UR,115`](datasheets/nexperia-ptvs5v0s1ur-115.pdf), `C478011` | SOD-123W | 5 V unidirectional, 6.4 V minimum breakdown, 9.2 V maximum clamp at 43.5 A, 400 W; low leakage and stocked cut tape |
-| BLE profile LEDs | 3 | 100 | Hubei KENTO [`KT-0603R`](datasheets/kento-kt-0603r.pdf), `C2286` | 0603 | High-volume red LED, 1.8-2.4 V and 300 mcd nominal at 20 mA; start with 4.7 kOhm and verify visibility around 0.25 mA |
+| BLE profile LEDs | 3 | 20 | NATIONSTAR [`NCD0805O1`](datasheets/nationstar-ncd0805o1.pdf), `C84262` | 0805, top-view | Orange LED, 1.5-2.6 V and 30-130 mcd at 20 mA, 130-degree viewing angle; start with 4.7 kOhm and verify visibility around 0.2 mA through the intended enclosure or light pipe |
 | Reverse-battery clamp | 1 | 10 | MDD [`SS34`](datasheets/mdd-ss34.pdf), `C8678` | SMA | 3 A/40 V; anode to GND and cathode to protected battery positive |
 | Small-signal N-MOSFETs | 7 | 20 | Yangjie [`BSS138`](datasheets/yangjie-bss138.pdf), `C400505` | SOT-23 | Level shifting, LED/reset sinks, and backlight P-MOS gate pull-down |
 | High-side P-MOSFETs | 2 | 10 | Yangjie [`YJL3401A`](datasheets/yangjie-yjl3401a.pdf), `C393520` | SOT-23 | One carries switched system power; one switches the 5 V backlight supply |
 | USB VBUS PTC | 1 | 10 | LUTE [`1206L100/16NR`](datasheets/lute-1206l100-16nr.pdf), `C7542956` | 1206 | 16 V, 1 A hold/1.8 A trip, approximately 50 mOhm initial resistance; verify the actual trip curve |
-| Battery fault fuse | 1 | 5 | Littelfuse [`0470002.DRSNP`](datasheets/littelfuse-0470002-drsnp.pdf), `C2760739`, or equivalent 2 A fast fuse | 1206 | Replaceable reverse-fault/short protection; verify I-squared-t and cold resistance |
+| Battery fault fuse | 1 | 10 | Littelfuse [`0466002.NRHF`](datasheets/littelfuse-0466002-nrhf.pdf), `C3105` | low-profile 1206 | Very-fast 2 A/63 V fuse; 31 mOhm nominal cold resistance, 0.2326 A-squared-second nominal melting I-squared-t, and 50 A interrupt rating for sacrificial reverse-battery/short protection |
 | Charger inductor | 1 | 5 | cjiang [`FXL0420-2R2-M`](datasheets/cjiang-fxl0420-2r2-m.pdf), `C167206` | molded SMD, 4.4 x 4.2 mm | 2.2 uH +/-20%, 4.5 A rated, 5 A saturation and 58 mOhm DCR for ETA6002 |
 | Boost inductor | 1 | 5 | cjiang [`FXL0420-1R5-M`](datasheets/cjiang-fxl0420-1r5-m.pdf), `C167205` | molded SMD, 4.4 x 4.2 mm | SY7069 reference value: 1.5 uH +/-20%, 5 A rated, 6 A saturation and 46 mOhm DCR; same footprint as charger inductor |
 | USB-C receptacle | 1 | 5 | Korean Hroparts [`TYPE-C-31-M-12`](datasheets/hroparts-type-c-31-m-12.pdf), `C165948` | right-angle 16-pin SMD with through-hole shell stakes | Very high-volume USB 2.0 receptacle; exposed signal pads and shell stakes suit hand soldering, but copy the exact drawing footprint |
@@ -198,7 +198,7 @@ simultaneous battery.
 | System-switch gate slew | 1 | 10 | 100 nF, 10 V, X7R | 0603 | Gate-to-source on the system P-MOSFET; with 10 kOhm/100 kOhm gives roughly 1 ms on and 10 ms off time constants |
 | LDO input/output | 2 | 10 | 1 uF, 10 V, X7R | 0603 or 0805 | Immediately beside ME6211; follow MICRONE layout |
 | USB limiter input/output | 2 | 10 | 1 uF, 10 V, X7R | 0805 | One at each side of SY6280; do not share through a long trace |
-| Wireless-module bulk | 1 | 10 | 4.7 uF, 10 V, X7R | 0805 | At the Holyiot 3.0 V entry, alongside 100 nF |
+| Wireless-module bulk | 1 | 10 | 4.7 uF, 10 V, X7R | 0805 | At the Holyiot `VCC` entry, alongside 100 nF |
 | Charger input | 1 | 10 | 10 uF, 10 V, X5R/X7R | 1206 | ETA6002 IN-to-PGND bypass |
 | Charger system output | 1 | 10 | 22 uF, 10 V, X5R | 1206 | ETA6002 SYS output filter beside its inductor |
 | Charger battery bypass | 1 | 10 | 1 uF, 10 V, X7R | 0805 | ETA6002 BATT bypass |
@@ -311,7 +311,7 @@ sheet specifies. STAT is an optional open-drain charge-status
 output and may safely be left unconnected; no indicator LED is included in
 this preliminary BOM.
 
-### Main power latch and ME6211 3.0 V regulator
+### Main power latch and ME6211 VCC regulator
 
 ```text
 VSYS ─────────────── YJL3401A source
@@ -328,7 +328,7 @@ VSYS ─────────────── YJL3401A source
                   all three contacts of other pole ── no-connect
 
                          ME6211C30
-VSYS_SW ─────────────+── VIN       VOUT ──+── 0 Ohm link ── 3V0
+VSYS_SW ─────────────+── VIN       VOUT ──+── 0 Ohm link ── VCC
                      |                   |
                    1 uF                1 uF
                      |                   |
@@ -360,7 +360,7 @@ key event. The separate `TS24CA` reset button also does not control this gate.
 ### SY7069 synchronous 5 V boost
 
 ```text
-VSYS_SW ──+────────────────────── IN      OUT ───────────── 5V_SYS
+VSYS_SW ──+────────────────────── IN      OUT ───────────── +5V
           |                      SY7069                         |
           +── 1.5 uH ─────────── LX                         22 uF || 22 uF
           |                                                    |
@@ -383,7 +383,7 @@ rectifier. Tie EN to `VSYS_SW`.
 ### Holyiot module, TrackPoint, indicators, and backlight
 
 ```text
-3V0 ── 0 Ohm link ──+── Holyiot VDD
+VCC ── 0 Ohm link ──+── Holyiot VDD
                      +── 4.7 uF ── GND
                      +── 100 nF ── GND
 
@@ -393,7 +393,7 @@ USB D+/D- ────────── Holyiot USB D+/D-
 ```
 
 Do not power the module from USB VBUS. Connect the Tag-Connect SWDIO, SWDCLK,
-RESET, 3V0 target sense, and GND pads to the matching module signals. Follow
+RESET, VCC target sense, and GND pads to the matching module signals. Follow
 Holyiot's ground-pad and antenna keep-out drawing.
 
 Fit this bidirectional circuit once for TrackPoint DATA and once for CLOCK:
@@ -401,12 +401,12 @@ Fit this bidirectional circuit once for TrackPoint DATA and once for CLOCK:
 ```text
                               4.7 kOhm
                                  |
-                                5V_SYS
+                                +5V
                                  |
 Holyiot GPIO ── source  BSS138  drain ── TrackPoint DATA or CLOCK
  internal pull-up        gate
                           |
-                         3V0
+                         VCC
 ```
 
 There is no external nRF-side pull-up. A SparkFun translator module already
@@ -415,7 +415,7 @@ has 10 kOhm on both sides; do not combine that module with these PCB pull-ups.
 TrackPoint RESET uses a different, unidirectional circuit:
 
 ```text
-5V_SYS ── 10 kOhm ──+── TrackPoint RESET
++5V ── 10 kOhm ──+── TrackPoint RESET
                      +── BSS138 drain
                          BSS138 source ── GND
 Holyiot GPIO ─────────── BSS138 gate
@@ -429,7 +429,7 @@ GPIO high asserts the active-low RESET. The three T430 indicator sinks each
 use the following circuit:
 
 ```text
-3V0 ── T430 internal LED ── series resistor ── BSS138 drain
+VCC ── T430 internal LED ── series resistor ── BSS138 drain
                                                     source ── GND
 Holyiot GPIO ────────────────────────────────────── gate
                                                      |
@@ -443,7 +443,7 @@ Series value: power LED 220 Ohm; each mute LED 3.9 kOhm.
 Each optional BLE profile LED is direct and active-low:
 
 ```text
-3V0 ── 4.7 kOhm ── LED anode |>| LED cathode ── Holyiot GPIO
+VCC ── 4.7 kOhm ── LED anode |>| LED cathode ── Holyiot GPIO
 ```
 
 The backlight PWM and high-side supply switch are separate paths:
@@ -454,7 +454,7 @@ Holyiot PWM GPIO ───────────────── T430 KBD_BL
 Holyiot enable GPIO ── 1 kOhm ── BSS138 gate
                                       +── 100 kOhm ── GND
 
-5V_SYS ─────────────── YJL3401A source
++5V ─────────────── YJL3401A source
    |                         drain ──+── BL_5V ── T430 backlight supply
    |                                +── 22 uF ── GND
    |                                +── 100 nF ── GND
@@ -465,7 +465,7 @@ Holyiot enable GPIO ── 1 kOhm ── BSS138 gate
                        BSS138 source ── GND
 ```
 
-The YJL3401A source must be at `5V_SYS`. Its 100 kOhm and 10 nF are both
+The YJL3401A source must be at `+5V`. Its 100 kOhm and 10 nF are both
 gate-to-source. The BSS138 only pulls the gate down; it does not carry
 backlight current. PWM remains a separate 0-3.0 V signal and must not be
 pulled up to 5 V.

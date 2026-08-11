@@ -32,7 +32,7 @@ The custom-board plan has three controls with deliberately different roles:
 
 The reset and main-power switches are separate parts. Pressing reset restarts
 firmware but leaves the power rails enabled. Operating the latch turns the
-3.0 V and 5 V system rails off or on while leaving the ETA6002 battery charger
+`VCC` and `+5V` system rails off or on while leaving the ETA6002 battery charger
 connected, so a fitted battery can still charge while the keyboard is off.
 
 ## Before wiring anything
@@ -122,8 +122,9 @@ LEDs:
 | 3 | P0.05 | `3.3 V -> 4.7 kΩ -> LED anode`; LED cathode to P0.05 |
 
 The two external LEDs are active-low: the GPIO sinks approximately 0.2-0.3 mA
-when illuminated. Use amber LEDs to match the preliminary design; red is an
-acceptable substitute. Do not use green, blue, or white LEDs.
+when illuminated. Use orange LEDs to match the preliminary PCB's NATIONSTAR
+NCD0805O1 indicators. Do not use green, blue, or white LEDs without reviewing
+the forward-voltage and current-limit assumptions.
 P0.05 is normally the DK virtual-serial RTS signal; this shield releases RTS
 while retaining UART TX/RX logging through the J-Link serial port.
 
