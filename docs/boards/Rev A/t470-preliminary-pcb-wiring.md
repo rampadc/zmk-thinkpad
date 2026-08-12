@@ -23,7 +23,8 @@ The custom PCB uses a centered 40-pin FFC connector for the keyboard's
 pin 3 and cable contact 36 mates with pin 38: `final PCB pin = cable contact +
 2`. Final connector pins 1-2 and 39-40 are unused. The temporary breakout board
 used during DK testing reverses the cable and is documented separately below.
-Within the 36 fine-pitch contacts, J38 pins 25, 30, and 32 are GND. J38 also has
+Within the 36 fine-pitch contacts, J38 pin 25 is the keyboard's `VCC3M` supply,
+and J38 pins 30 and 32 are GND. J38 also has
 connector/shield grounds 37 (`GND1`) and 38 (`GND2`), separate from those 36
 contacts. Bond every available ground contact to board ground.
 
@@ -66,25 +67,26 @@ GPIO for every T470-specific signal.
 | 24 | 17 | DRV10 | 42 | P1.08 | Matrix output |
 | 25 | 16 | DRV8 | 7 | P0.02 | Matrix output |
 | 26 | 15 | DRV11 | 30 | P1.02 | Matrix output |
-| 27 | 14 | GND (J38 pin 25) | 1/25/37 | GND | Connect directly to board ground |
+| 27 | 14 | `VCC3M` (J38 pin 25) | - | - | Connect to regulated 3.0 V; decouple near the FFC |
 | 28 | 13 | `-LED_FNLOCK` | 29 | P1.01 | External low-side MOSFET and 100 ohm series resistor |
 | 29 | 12 | `-LED_MUTE` | 50 | P0.20 | External low-side MOSFET and 560 ohm series resistor |
 | 30 | 11 | `-LED_MICMUTE` | 51 | P0.17 | External low-side MOSFET and 560 ohm series resistor |
 | 31 | 10 | `-HOTKEY` (Fn) | 2 | P1.11 | Active-low input, internal pull-up |
 | 32 | 9 | GND (J38 pin 30) | 1/25/37 | GND | Connect directly to board ground |
-| 33 | 8 | `-LED_CAPSLOCK` | 26 | P0.22 | External low-side MOSFET and 100 ohm series resistor |
+| 33 | 8 | `-LED_CAPSLOCK` (J38 pin 31) | 26 | P0.22 | External low-side MOSFET and 100 ohm series resistor |
 | 34 | 7 | GND (J38 pin 32) | 1/25/37 | GND | Connect directly to board ground |
-| 35 | 6 | NC (J38 pin 33) | - | - | Leave unconnected |
-| 36 | 5 | `TP4LEFT` | - | - | Direct passive bridge to J37 pin 7 |
-| 37 | 4 | `TP4RIGHT` | - | - | Direct passive bridge to J37 pin 6 |
-| 38 | 3 | `TP4MIDDLE` | - | - | Direct passive bridge to J37 pin 5 |
+| 35 | 6 | `TP4LEFT` (J38 pin 33) | - | - | Direct passive bridge to J37 pin 7 |
+| 36 | 5 | `TP4RIGHT` (J38 pin 34) | - | - | Direct passive bridge to J37 pin 6 |
+| 37 | 4 | `TP4MIDDLE` (J38 pin 35) | - | - | Direct passive bridge to J37 pin 5 |
+| 38 | 3 | `KBD_ID` (J38 pin 36) | - | - | Leave unconnected unless keyboard identification is implemented |
 | 39-40 | 1-2 | NC | - | - | Outside the 36-contact cable; leave unconnected |
 | Connector grounds (J38 37/38) | Connector grounds (J38 37/38) | GND | 1/25/37 | GND | Bond conductive connector/shield tabs to board ground when accessible |
 
 Use the straight column for a correctly oriented connector and the reversed
-column for the temporary DK breakout. The observed reversed anchor is
-J38 pin 30 on breakout pin 9, which is GND. `HOTKEY` is J38 pin 29 and therefore
-appears on reversed breakout pin 10.
+column for the temporary DK breakout. J38 pin 25 is `VCC3M` and appears on
+reversed breakout pin 14. `HOTKEY` is J38 pin 29 and therefore appears on
+reversed breakout pin 10. J38 pins 30, 31, and 32 are GND, `-LED_CAPSLOCK`, and
+GND, appearing on reversed breakout pins 9, 8, and 7 respectively.
 
 Sheet 62 explicitly wires the three button nets between the keyboard flex and
 J37; they do not leave that sheet for the EC. Reproduce those passive bridges
@@ -126,13 +128,15 @@ are used for the matrix.
 | 17 | DRV10 | P1.08 |
 | 16 | DRV8 | P0.02 |
 | 15 | DRV11 | P1.02 |
-| 14 | GND (J38 pin 25) | GND |
+| 14 | `VCC3M` (J38 pin 25) | DK 3.0 V |
 | 10 | `-HOTKEY` (Fn) | P1.11 |
 | 9 | GND (J38 pin 30) | GND |
+| 8 | `-LED_CAPSLOCK` (J38 pin 31) | Leave disconnected during matrix discovery |
 | 7 | GND (J38 pin 32) | GND |
 
-Leave the LED, NC, and TrackPoint-button breakout pins disconnected during
-matrix discovery. SENSE and `HOTKEY` inputs are active-low with internal
+Connect reversed breakout pin 14 to the DK's regulated 3.0 V supply. Leave the
+LED, NC, and TrackPoint-button breakout pins disconnected during matrix
+discovery. SENSE and `HOTKEY` inputs are active-low with internal
 pull-ups. The firmware prompts for all 84 keys in physical US-layout order and
 reports each captured `DRVn`/`SENSEn` coordinate over the DK's J-Link UART at
 115200 baud. It prints the complete map after the final key.
@@ -147,9 +151,9 @@ The DK and Holyiot use the same matrix and `HOTKEY` GPIOs in this guide.
 | 2 | `VCC_TP` | - | - | Switched/fused 5 V branch, default schematic option |
 | 3 | GND | 1/25/37 | GND | Solid ground plane |
 | 4 | `TP4_RESET` | 54 | P0.13 | Open-drain reset MOSFET, pulled up to 5 V `VCC_TP` |
-| 5 | `TP4MIDDLE` | - | - | Direct passive bridge to final PCB FFC pin 38 |
-| 6 | `TP4RIGHT` | - | - | Direct passive bridge to final PCB FFC pin 37 |
-| 7 | `TP4LEFT` | - | - | Direct passive bridge to final PCB FFC pin 36 |
+| 5 | `TP4MIDDLE` | - | - | Direct passive bridge to final PCB FFC pin 37 |
+| 6 | `TP4RIGHT` | - | - | Direct passive bridge to final PCB FFC pin 36 |
+| 7 | `TP4LEFT` | - | - | Direct passive bridge to final PCB FFC pin 35 |
 | 8 | `VCC_TP` | - | - | Same switched/fused 5 V TrackPoint branch |
 | 9 | `TP4CLK` | 53 | P0.14 | Mandatory 5 V-to-3.0 V open-collector translator |
 | 10 | Backlight 5 V feed | - | - | Switched 5 V after backlight P-MOSF |
@@ -201,7 +205,7 @@ to `VCC_TP` 5 V, matching the selected motherboard option. GPIO high asserts
 reset by pulling the keyboard-side line low.
 
 `TP4LEFT`, `TP4RIGHT`, and `TP4MIDDLE` are point-to-point passive bridges from
-final PCB FFC pins 36/37/38 to J37 pins 7/6/5. They do not route to the MEC1653 EC
+final PCB FFC pins 35/36/37 to J37 pins 7/6/5. They do not route to the MEC1653 EC
 on sheet 59. Preserve each bridge through a removable 0-ohm link and add a test
 pad; do not add pull-ups, translators, or Holyiot GPIO connections. The
 TrackPoint controller should encode these button states into its PS/2 packets.
