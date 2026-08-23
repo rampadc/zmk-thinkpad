@@ -203,7 +203,10 @@ nRF GPIO ── source  BSS138  drain ── J7 DATA or CLOCK
 - Low-side pull-up: nRF internal pull-up only.
 - Place both MOSFETs and their high-side resistors close to J7 pins 37 and 39.
 
-### RESET
+### RESET -- Revision A polarity erratum
+
+TrackPoint IV RESET is active high at J7. The fabricated Revision A Q2 stage
+below is an inverter; it is usable, but the nRF waveform must be inverted.
 
 Use a third BSS138 as a unidirectional open-drain reset driver:
 
@@ -220,9 +223,12 @@ J7 TP4_RESET ─ drain  BSS138  source ─ GND
                      100 kΩ to GND
 ```
 
-GPIO high turns the MOSFET on and asserts the active-low 5 V reset. The 100 kΩ
-gate pull-down keeps reset released while the MCU is unpowered or starting.
-The Holyiot devicetree will need the correct reset polarity for this circuit.
+GPIO low turns the MOSFET off and R9 pulls J7 `TP4_RESET` high, asserting reset.
+After 600 ms, GPIO high turns the MOSFET on and pulls J7 `TP4_RESET` low,
+releasing reset. The 100 kΩ gate pull-down therefore holds reset asserted while
+the MCU is unpowered or starting. Firmware for a fabricated Revision A board
+must drive nRF low for the reset interval, then high continuously; the generic
+high-then-low TrackPoint waveform is wrong for this inverting stage.
 
 ## Indicator LEDs
 

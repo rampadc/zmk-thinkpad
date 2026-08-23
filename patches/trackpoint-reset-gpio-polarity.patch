@@ -1,0 +1,37 @@
+diff --git a/src/drivers/input/input_mouse_ps2.c b/src/drivers/input/input_mouse_ps2.c
+--- a/src/drivers/input/input_mouse_ps2.c
++++ b/src/drivers/input/input_mouse_ps2.c
+@@ -1846,15 +1846,12 @@ int zmk_mouse_ps2_init_power_on_reset(const struct device *dev) {
+     if (data->rst_gpio.port == NULL) {
+         data->rst_gpio = config->rst_gpio;
+-
+-        // Overwrite any user-provided flags from the devicetree
+-        data->rst_gpio.dt_flags = 0;
+     }
+ 
+-    //  Set reset pin low...
+-    int err = gpio_pin_configure_dt(&data->rst_gpio, (GPIO_OUTPUT_HIGH));
++    // Assert the device's active-high RESET using the board-specific GPIO
++    // polarity from devicetree. Revision A hardware inverts its MCU pin.
++    int err = gpio_pin_configure_dt(&data->rst_gpio, GPIO_OUTPUT_ACTIVE);
+     if (err) {
+-        LOG_ERR("Failed Power-On-Reset: Failed to configure RST GPIO pin to "
+-                "output low (err %d)",
++        LOG_ERR("Failed Power-On-Reset: Failed to assert RST GPIO (err %d)",
+                 err);
+         return err;
+     }
+@@ -1863,11 +1860,10 @@ int zmk_mouse_ps2_init_power_on_reset(const struct device *dev) {
+     // Wait 600ms
+     k_sleep(MOUSE_PS2_POWER_ON_RESET_TIME);
+ 
+-    // Set pin high
++    // Release RESET. gpio_pin_set_dt() applies the devicetree active level.
+     err = gpio_pin_set_dt(&data->rst_gpio, 0);
+     if (err) {
+-        LOG_ERR("Failed Power-On-Reset: Failed to set RST GPIO pin to "
+-                "low (err %d)",
++        LOG_ERR("Failed Power-On-Reset: Failed to release RST GPIO (err %d)",
+                 err);
+         return err;
+     }

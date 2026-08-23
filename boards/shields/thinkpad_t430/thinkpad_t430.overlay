@@ -66,11 +66,15 @@
         wakeup-source;
         input-gpios =
             <&gpio1 14 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
-            <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
+            <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+#ifndef THINKPAD_T430_NO_DK_RECOVERY
+            ,
             <&gpio0 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
             <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
             <&gpio0 24 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>,
-            <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+#endif
+            ;
     };
 
     kscan_composite: kscan_composite {
@@ -134,7 +138,9 @@
             RC(12,7) RC(12,5) RC(10,7) RC(9,7)
 
             /* DK SW1 through SW4 recovery controls. */
+#ifndef THINKPAD_T430_NO_DK_RECOVERY
             RC(16,2) RC(16,3) RC(16,4) RC(16,5)
+#endif
         >;
     };
 
@@ -185,6 +191,10 @@
         compatible = "zmk,input-mouse-ps2";
         status = "okay";
         ps2-device = <&trackpoint_ps2>;
+        /*
+         * Revision A Q2 inverts this GPIO: P1.08 low produces 5 V (asserted)
+         * at the TrackPoint, and P1.08 high pulls TrackPoint RESET low.
+         */
         rst-gpios = <&gpio1 8 GPIO_ACTIVE_HIGH>;
 
         sampling-rate = <100>;

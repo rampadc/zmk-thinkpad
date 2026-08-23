@@ -3,6 +3,7 @@
 if SHIELD_THINKPAD_T470
 
 config ZMK_KEYBOARD_NAME
+    string
     default "ThinkPad T470"
 
 endif

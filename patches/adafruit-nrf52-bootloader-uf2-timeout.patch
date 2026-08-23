@@ -1,0 +1,14 @@
+diff --git a/src/main.c b/src/main.c
+index b813a84..32a4a11 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -336,7 +336,7 @@ static void check_dfu_mode(void) {
+     // Initiate an update of the firmware.
+     if (APP_ASKS_FOR_SINGLE_TAP_RESET() || uf2_dfu || serial_only_dfu) {
+-      // If USB is not enumerated in 3s (eg. because we're running on battery), we restart into app.
+-      bootloader_dfu_start(_ota_dfu, 3000, true);
++      // Give desktop hosts enough time to enumerate and mount the UF2 volume.
++      bootloader_dfu_start(_ota_dfu, 30000, true);
+     } else {
+       // No timeout if bootloader requires user action (double-reset).
+       bootloader_dfu_start(_ota_dfu, 0, false);

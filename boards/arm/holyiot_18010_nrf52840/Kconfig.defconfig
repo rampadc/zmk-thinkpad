@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MIT
+
+if BOARD_HOLYIOT_18010_NRF52840
+
+config BOARD
+	default "holyiot_18010_nrf52840"
+
+config BT_CTLR
+	default BT
+
+config BOARD_ENABLE_DCDC
+	default y
+
+config BOARD_ENABLE_DCDC_HV
+	default y
+
+endif

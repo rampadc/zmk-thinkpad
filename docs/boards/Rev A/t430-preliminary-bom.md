@@ -416,7 +416,8 @@ Holyiot GPIO ── source  BSS138  drain ── TrackPoint DATA or CLOCK
 There is no external nRF-side pull-up. A SparkFun translator module already
 has 10 kOhm on both sides; do not combine that module with these PCB pull-ups.
 
-TrackPoint RESET uses a different, unidirectional circuit:
+TrackPoint RESET uses a different, unidirectional inverting circuit. TrackPoint
+IV RESET itself is active high:
 
 ```text
 +5V ── 10 kOhm ──+── TrackPoint RESET
@@ -429,8 +430,10 @@ Holyiot GPIO ─────────── BSS138 gate
                              GND
 ```
 
-GPIO high asserts the active-low RESET. The three T430 indicator sinks each
-use the following circuit:
+GPIO low leaves the MOSFET off, so the 10 kOhm resistor asserts RESET high at
+5 V. After 600 ms firmware must drive GPIO high, turning the MOSFET on and
+releasing RESET low. This is a Revision A-specific inverted firmware waveform.
+The three T430 indicator sinks each use the following circuit:
 
 ```text
 VCC ── T430 internal LED ── series resistor ── BSS138 drain

@@ -58,7 +58,9 @@
                 &kp LEFT &kp UP &kp DOWN &kp RIGHT
 
                 /* DK SW1: USB, SW2: BLE, SW3: next host, SW4: clear host. */
+#ifndef THINKPAD_T430_NO_DK_RECOVERY
                 &out OUT_USB &out OUT_BLE &bt BT_NXT &bt BT_CLR
+#endif
             >;
         };
 
@@ -105,7 +107,9 @@
                 &trans &trans &trans &trans
 
                 /* DK recovery controls remain active on every layer. */
+#ifndef THINKPAD_T430_NO_DK_RECOVERY
                 &trans &trans &trans &trans
+#endif
             >;
         };
     };

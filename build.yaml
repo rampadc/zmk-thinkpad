@@ -6,3 +6,6 @@ include:
   - board: nrf52840dk_nrf52840
     shield: thinkpad_t470
     artifact-name: thinkpad_t470
+  - board: holyiot_18010_nrf52840
+    shield: thinkpad_t430_reva
+    artifact-name: thinkpad_t430_reva

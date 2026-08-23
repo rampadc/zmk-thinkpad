@@ -1,0 +1,15 @@
+identifier: holyiot_18010_nrf52840
+name: Holyiot 18010 nRF52840
+type: mcu
+arch: arm
+ram: 256
+flash: 1024
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - ble
+  - gpio
+  - pwm
+  - usb_device

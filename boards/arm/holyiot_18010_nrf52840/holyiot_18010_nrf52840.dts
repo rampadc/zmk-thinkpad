@@ -1,0 +1,98 @@
+/*
+ * Holyiot 18010 nRF52840 module carrier.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	model = "Holyiot 18010 nRF52840";
+	compatible = "holyiot,18010-nrf52840";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	/* Labels retained so the DK-oriented T430 base overlay can be shared. */
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 { gpios = <&gpio0 9 GPIO_ACTIVE_LOW>; status = "disabled"; };
+		led1: led_1 { gpios = <&gpio0 10 GPIO_ACTIVE_LOW>; status = "disabled"; };
+		led2: led_2 { gpios = <&gpio0 6 GPIO_ACTIVE_LOW>; status = "disabled"; };
+		led3: led_3 { gpios = <&gpio0 8 GPIO_ACTIVE_LOW>; status = "disabled"; };
+	};
+};
+
+&uicr {
+	gpio-as-nreset;
+};
+
+&gpiote { status = "okay"; };
+&gpio0 { status = "okay"; };
+&gpio1 { status = "okay"; };
+
+arduino_i2c: &i2c0 { status = "disabled"; };
+arduino_spi: &spi1 { status = "disabled"; };
+&qspi { status = "disabled"; };
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		mbr_partition: partition@0 {
+			label = "mbr";
+			reg = <0x00000000 0x00001000>;
+			read-only;
+		};
+
+		slot0_partition: partition@1000 {
+			label = "image-0";
+			reg = <0x00001000 0x000e9000>;
+		};
+
+		storage_partition: partition@ea000 {
+			label = "storage";
+			reg = <0x000ea000 0x00008000>;
+		};
+
+		dfu_reserved_partition: partition@f2000 {
+			label = "dfu-reserved";
+			reg = <0x000f2000 0x00002000>;
+			read-only;
+		};
+
+		bootloader_partition: partition@f4000 {
+			label = "uf2-bootloader";
+			reg = <0x000f4000 0x0000a000>;
+			read-only;
+		};
+
+		mbr_params_partition: partition@fe000 {
+			label = "mbr-params";
+			reg = <0x000fe000 0x00001000>;
+			read-only;
+		};
+
+		bootloader_settings_partition: partition@ff000 {
+			label = "bootloader-settings";
+			reg = <0x000ff000 0x00001000>;
+			read-only;
+		};
+	};
+};
+
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};

@@ -1,0 +1,9 @@
+file_format: "1"
+id: thinkpad_t430_reva
+name: ThinkPad T430 Revision A Holyiot
+type: shield
+url: https://github.com/rampadc/zmk-thinkpad
+features:
+  - keys
+  - pointer
+  - backlight

@@ -1,0 +1,2 @@
+#define THINKPAD_T430_NO_DK_RECOVERY
+#include "../thinkpad_t430/thinkpad_t430.keymap"

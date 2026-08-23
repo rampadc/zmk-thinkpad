@@ -1,0 +1,66 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+build_dir="$repo_root/.zmk/build/thinkpad_t430_reva"
+uf2="$build_dir/zephyr/zmk.uf2"
+
+cd "$repo_root/.zmk"
+
+ZEPHYR_TOOLCHAIN_VARIANT=cross-compile \
+CROSS_COMPILE="$(brew --prefix)/bin/arm-none-eabi-" \
+"$repo_root/.zmk/.venv/bin/python" -m west build -p always \
+    -s "$repo_root/.zmk/zmk/app" -d "$build_dir" \
+    -b holyiot_18010_nrf52840 -- \
+    -DSHIELD=thinkpad_t430_reva \
+    -DZMK_CONFIG="$repo_root/config" \
+    -DZMK_EXTRA_MODULES="$repo_root" \
+    -DEXTRA_CONF_FILE="$repo_root/config/holyiot_t430_reva_release.conf"
+
+volume=/Volumes/T430BOOT
+
+if [ ! -d "$volume" ]; then
+    port=$(find /dev -maxdepth 1 -name 'cu.usbmodem*' -print | head -n 1)
+    if [ -z "$port" ]; then
+        echo "T430 Rev A USB CDC port not found" >&2
+        exit 1
+    fi
+
+    PORT="$port" python3 - <<'PY'
+import os
+import termios
+import time
+
+fd = os.open(os.environ["PORT"], os.O_RDWR | os.O_NOCTTY)
+attrs = termios.tcgetattr(fd)
+attrs[4] = termios.B1200
+attrs[5] = termios.B1200
+termios.tcsetattr(fd, termios.TCSANOW, attrs)
+time.sleep(0.5)
+os.close(fd)
+PY
+
+    attempt=0
+    while [ ! -d "$volume" ] && [ "$attempt" -lt 200 ]; do
+        sleep 0.1
+        attempt=$((attempt + 1))
+    done
+fi
+
+if [ ! -d "$volume" ]; then
+    echo "UF2 volume $volume did not appear" >&2
+    exit 1
+fi
+
+# UF2 drives disappear as soon as the payload is complete. On macOS, -X keeps
+# cp from attempting an extended-attribute write after the device has rebooted.
+attempt=0
+while ! cp -X "$uf2" "$volume/ZMK2.UF2" 2>/dev/null; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 100 ]; then
+        echo "UF2 volume appeared but did not become writable" >&2
+        exit 1
+    fi
+    sleep 0.1
+done
+printf 'Flashed %s\n' "$uf2"

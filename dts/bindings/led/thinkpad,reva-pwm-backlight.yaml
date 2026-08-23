@@ -1,0 +1,21 @@
+description: ThinkPad Revision A PWM backlight with a sequenced supply enable
+
+compatible: "thinkpad,reva-pwm-backlight"
+
+include: base.yaml
+
+properties:
+  enable-gpios:
+    type: phandle-array
+    required: true
+
+  startup-delay-ms:
+    type: int
+    default: 35
+
+child-binding:
+  description: PWM-controlled keyboard backlight channel
+  properties:
+    pwms:
+      type: phandle-array
+      required: true
