@@ -7,6 +7,11 @@ BOM and must be validated as built.
 
 ## Required changes
 
+- Replace the Revision A `SY6280AAC` plus `ETA6002E8A` power path with the
+  `BQ24073RGTR` implementation specified in
+  [`../Rev B/bq24073-power-path.md`](../Rev%20B/bq24073-power-path.md). Remove
+  the obsolete `USB_5V_LIM` net and charger inductor; retain the protected
+  `USB_VBUS_RAW`, `BAT_PROTECTED`, and downstream `VSYS` domains.
 - Replace the seven individual SOT-23 BSS138 devices with four LGE
   `BSS138DW` dual MOSFET packages, using seven internal FETs and leaving one
   unused.
@@ -41,7 +46,7 @@ BOM and must be validated as built.
 
 | Function | Fit | Buy | Suggested part / LCSC | Package | Constraint |
 | --- | ---: | ---: | --- | --- | --- |
-| Dual small-signal N-MOSFETs | 4 | 10 | LGE `BSS138DW`, `C27975287` | SOT-363 | Eight independent N-MOSFETs total: use seven for TrackPoint DATA/CLOCK translation, TrackPoint RESET, three indicator sinks, and the backlight P-MOS gate pull-down; leave the eighth unused. |
+| Dual small-signal N-MOSFETs | 4 | 10 | LGE `BSS138DW`, `C27975287` | SOT-363 | Eight independent N-MOSFETs total: use seven for the three non-inverting TrackPoint DATA/CLOCK/active-high RESET level shifters, three indicator sinks, and the backlight P-MOS gate pull-down; leave the eighth unused. |
 
 Manufacturer pinout:
 

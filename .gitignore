@@ -1,3 +1,4 @@
 .zmk/
 tmp/
 outputs/
+output/*

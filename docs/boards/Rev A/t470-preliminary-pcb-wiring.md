@@ -150,7 +150,7 @@ The DK and Holyiot use the same matrix and `HOTKEY` GPIOs in this guide.
 | 1 | `TP4DATA` | 52 | P0.15 | Mandatory 5 V-to-3.0 V open-collector translator |
 | 2 | `VCC_TP` | - | - | Switched/fused 5 V branch, default schematic option |
 | 3 | GND | 1/25/37 | GND | Solid ground plane |
-| 4 | `TP4_RESET` | 54 | P0.13 | Open-drain reset MOSFET, pulled up to 5 V `VCC_TP` |
+| 4 | `TP4_RESET` | 54 | P0.13 | Active-high TrackPoint reset behind an inverting low-side MOSFET |
 | 5 | `TP4MIDDLE` | - | - | Direct passive bridge to final PCB FFC pin 37 |
 | 6 | `TP4RIGHT` | - | - | Direct passive bridge to final PCB FFC pin 36 |
 | 7 | `TP4LEFT` | - | - | Direct passive bridge to final PCB FFC pin 35 |
@@ -201,8 +201,10 @@ Holyiot GPIO -- BSS138 source   drain -- TP4DATA/TP4CLK
 
 Use a third BSS138 for reset: drain to J37 pin 4, source to ground, gate from
 P0.13 through 1 kOhm, and 100 kOhm gate-to-ground. Fit a 10 kOhm reset pull-up
-to `VCC_TP` 5 V, matching the selected motherboard option. GPIO high asserts
-reset by pulling the keyboard-side line low.
+to `VCC_TP` 5 V, matching the selected motherboard option. TrackPoint IV RESET
+is active high: nRF low leaves the MOSFET off and asserts J37 reset high; after
+600 ms nRF high turns the MOSFET on and releases J37 reset low. The gate
+pull-down holds reset asserted, not released, while the Holyiot is unpowered.
 
 `TP4LEFT`, `TP4RIGHT`, and `TP4MIDDLE` are point-to-point passive bridges from
 final PCB FFC pins 35/36/37 to J37 pins 7/6/5. They do not route to the MEC1653 EC

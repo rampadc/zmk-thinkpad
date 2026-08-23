@@ -1,16 +1,20 @@
 # Shared T430/T470 Revision B HolyIOT wiring
 
 Revision B has one HolyIOT-18010 nRF52840 core and two alternative keyboard
-connectors: T430 and T470. The connector nets meet at the shared named matrix
-nets below. This document is authoritative for the module end of those nets;
-connector pin numbers belong in the model-specific wiring documents.
+adapters: T430 and T470. A 60-contact FFC carries the shared named nets between
+the core and one passive model-specific connector board. The universal
+connector footprint and pinout are authoritative in
+[`universal-connector-ffc.md`](universal-connector-ffc.md). This document is
+authoritative for the module end of those nets; keyboard connector pin numbers
+belong in the model-specific wiring documents.
 
 The T470 straight 40-pin connector is defined in
 [`t470-revB-connector.md`](t470-revB-connector.md).
 
-Only one keyboard may be installed at a time. Do not connect T430 and T470
-keyboards simultaneously, because their switch matrices would be electrically
-paralleled. Pad numbers use the module manufacturer's top-view convention.
+Only one keyboard adapter may be installed at a time. Do not connect T430 and
+T470 keyboards simultaneously, because their switch matrices would be
+electrically paralleled. Pad numbers use the module manufacturer's top-view
+convention.
 
 ## Shared matrix nets
 
@@ -74,6 +78,8 @@ HolyIOT-specific firmware overlay rather than the DK overlay unchanged.
 | T470 `TP4MIDDLE` | 46 | `P0.26` | Active-low input, internal pull-up |
 | T470 `TP4RIGHT` | 45 | `P0.06` | Active-low input, internal pull-up |
 | T470 `TP4LEFT` | 44 | `P0.08` | Active-low input, internal pull-up |
+| Keyboard `-KBD_BL_DTCT` | 36 | `P0.10` | Input through 10 kOhm series resistor; characterize polarity/pull separately for T430 and T470 |
+| Adapter ID | 35 | `P0.09` | Internal pull-up; T430 open, T470 grounded |
 
 The T470 button nets are read directly by the nRF and reported as mouse
 buttons. Do not also bridge them to the TrackPoint controller unless that
@@ -87,27 +93,35 @@ arrangement has been tested. No external button pull resistor is required.
 | TrackPoint reset | 54 | `P0.13` |
 | TrackPoint clock | 53 | `P0.14` |
 | TrackPoint data | 52 | `P0.15` |
-| Microphone-mute LED | 51 | `P0.17` |
-| Speaker-mute LED | 50 | `P0.20` |
-| Fn-lock LED | 43 | `P0.27` |
+| `-LEDMICMUTE` sink | 51 | `P0.17` |
+| `-LED_MUTE` sink | 50 | `P0.20` |
+| T470 `-LED_FNLOCK` sink | 43 | `P0.27` |
 | BLE profile LED 1 | 42 | `P1.08` |
 | BLE profile LED 2 | 41 | `P0.11` |
 | BLE profile LED 3 | 40 | `P0.25` |
 | Backlight enable | 39 | `P1.12` |
-| Caps Lock LED | 38 | `P1.14` |
+| T470 `-LED_CAPSLOCK` sink | 38 | `P1.14` |
 | Backlight PWM | 33 | `P1.04` |
-| Power/status LED | 29 | `P1.01` |
+| T430 `-LEDPWR` sink | 29 | `P1.01` |
 
-TrackPoint clock, data and reset still require the model-specific voltage
-conditioning. This table assigns GPIOs; it does not authorize direct 5 V
+TrackPoint clock, data and reset use the three core-board BSS138 level-shifter
+channels defined in
+[`universal-connector-ffc.md`](universal-connector-ffc.md#trackpoint-iv-reset-polarity-and-driver).
+Each channel has a fitted 10 kOhm pull-up on the 3.0 V nRF side and a fitted
+10 kOhm pull-up on the 5 V keyboard side. The keyboard-specific daughter board
+is passive. This table assigns GPIOs; it does not authorize direct 5 V
 connections to the nRF52840.
 
 ## Power, programming and release checks
 
+- Implement the shared core-board charger and power path according to
+  [`bq24073-power-path.md`](bq24073-power-path.md); it replaces the Revision A
+  `SY6280AAC` and `ETA6002E8A` circuitry for both keyboard variants.
 - Connect module grounds at pads 1, 25 and 37 to the ground plane.
 - Connect pad 14, `VDD-nRF`, to the regulated supply with required decoupling.
 - Reserve pads 22-24 for USB VBUS, D- and D+ and pads 31-32 for SWD.
-- Leave `P0.09` and `P0.10` unused unless NFC is explicitly disabled.
+- Set `CONFIG_NFCT_PINS_AS_GPIOS=y`; use `P0.09` for the single adapter-ID
+  strap and `P0.10` only for keyboard `-KBD_BL_DTCT`.
 - Verify both connector symbols map contacts to named nets; never infer T470
   auxiliary pins from nearby trace crossings.
 - Run ERC to ensure no matrix net reaches two HolyIOT GPIOs.

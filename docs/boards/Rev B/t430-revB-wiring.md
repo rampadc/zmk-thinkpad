@@ -1,9 +1,11 @@
 # T430 connector - Revision B wiring
 
-Revision B uses one shared HolyIOT core for either a T430 or T470 keyboard.
-The authoritative module GPIO allocation and connector-sharing rules are in
-[`shared-module-wiring.md`](shared-module-wiring.md). This document defines the
-T430 connector side of that design. It replaces
+Revision B uses one shared HolyIOT core and a passive model-specific adapter for
+either a T430 or T470 keyboard. The authoritative module GPIO allocation is in
+[`shared-module-wiring.md`](shared-module-wiring.md), and the core-to-adapter
+FFC is defined in
+[`universal-connector-ffc.md`](universal-connector-ffc.md). This document
+defines the T430 keyboard-connector side of that adapter. It replaces
 the matrix assignment in
 [`../Rev A/t430-preliminary-pcb-wiring.md`](../Rev%20A/t430-preliminary-pcb-wiring.md)
 for Revision B hardware. Connector signal names and matrix indices do not
@@ -14,9 +16,9 @@ drawing. Verify that the PCB footprint uses the same view before routing.
 
 ## Revision A to Revision B matrix changes
 
-| Matrix signal | T430 J7 pin | Revision A module connection | Revision B module connection | Required PCB action |
+| Matrix signal | T430 J7 pin | Revision A module connection | Revision B core connection | Required adapter/core action |
 | --- | ---: | --- | --- | --- |
-| `DRV8` | 6 | Holyiot pad 7, `P0.02/AIN0` | Holyiot pad 55, `P0.16` | Remove the J7 pin 6 route from pad 7 and route J7 pin 6 to pad 55 |
+| `DRV8` | 6 | Holyiot pad 7, `P0.02/AIN0` | Universal `DRV8`, then Holyiot pad 55, `P0.16` | Route J7 pin 6 only to universal `DRV8`; route core `DRV8` only to pad 55 |
 | `DRV0`-`DRV7`, `DRV9`-`DRV15` | See complete table below | Existing Revision A assignments | Unchanged | Retain existing routes |
 | `SENSE0`-`SENSE7` | See complete table below | Existing Revision A assignments | Unchanged | Retain existing routes |
 
@@ -102,6 +104,40 @@ Revision B.
 | Power, `-PWRSWITCH` | 19 | 26 | `P0.22` | None |
 
 Configure both as active-low inputs with internal pull-ups.
+
+## Complete Revision B auxiliary mapping
+
+The passive T430 adapter carries every non-matrix J7 function below. J7 pin 21
+reaches the protected core backlight-detect input rather than being silently
+discarded.
+
+| T430 J7 pin | Signal | Universal core pin | Universal daughter-board pad |
+| ---: | --- | ---: | ---: |
+| 1 | `-HOTKEY` | 28 | 33 |
+| 19 | `-PWRSWITCH` | 29 | 32 |
+| 21 | `-KBD_BL_DTCT` | 35 | 26 |
+| 23 | `-LEDPWR` | 45 | 16 |
+| 25 | `KBD_BL_PWM` | 50 | 11 |
+| 27 | GND | 55 | 6 |
+| 29 | `BL_5V` | 51 | 10 |
+| 31 | `BL_5V` | 52 | 9 |
+| 33 | `-LED_MUTE` | 47 | 14 |
+| 34 | GND | 58 | 3 |
+| 35 | `VCC` | 56 | 5 |
+| 36 | `-LEDMICMUTE` | 48 | 13 |
+| 37 | `TP4_DATA` | 37 | 24 |
+| 38 | `+5V` | 42 | 19 |
+| 39 | `TP4_CLOCK` | 39 | 22 |
+| 40 | `TP4_RESET` | 41 | 20 |
+| 41 | GND | 1 | 60 |
+| 42 | GND | 18 | 43 |
+| 43 | GND | 27 | 34 |
+| 44 | GND | 36 | 25 |
+
+T430 leaves `-LED_FNLOCK` and `-LED_CAPSLOCK` unconnected. T470 leaves
+`-LEDPWR` and `-PWRSWITCH` unconnected. These are separate universal nets and
+separate core-board circuits; do not merge them merely because only one
+adapter is fitted at a time.
 
 ## Schematic and firmware checklist
 

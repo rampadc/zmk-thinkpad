@@ -1,19 +1,24 @@
 # T470 connector - Revision B wiring
 
-Revision B uses a 40-pin, 0.5 mm bottom-contact FFC connector for the T470
-keyboard cable. It follows the **straight** connector mapping:
+The passive T470 Revision B adapter uses a 40-pin, 0.5 mm bottom-contact FFC
+connector for the keyboard cable. The adapter connects to the shared core using
+the 60-contact interface in
+[`universal-connector-ffc.md`](universal-connector-ffc.md). The keyboard
+connector follows the **straight** mapping:
 
 ```text
 FPC1 pin = T470 keyboard/J38 contact + 2
 ```
 
 FPC1 pins 1-2 and 39-40 are not keyboard cable contacts. FPC1 pin 38 is cable
-contact/J38 pin 36, `KBD_ID`, intentionally left unconnected in Revision B.
+contact/J38 pin 36, `KBD_ID`. It crosses the universal FFC on the T470 adapter,
+but the core leaves it electrically unimplemented until it is characterized.
+The T430 connector has no equivalent `KBD_ID` signal.
 Connector shield tabs 41 and 42 connect to ground. The table below is the
 Revision B schematic source of truth; do not apply the reversed DK-breakout
 numbering to this connector.
 
-| FPC1 pin | Signal | Shared/module destination |
+| FPC1 pin | Signal | Universal adapter destination |
 | ---: | --- | --- |
 | 1-2 | NC | Leave unconnected |
 | 3 | `SENSE3` | Shared matrix net |
@@ -40,24 +45,57 @@ numbering to this connector.
 | 24 | `DRV10` | Shared matrix net |
 | 25 | `DRV8` | Shared matrix net |
 | 26 | `DRV11` | Shared matrix net |
-| 27 | `VCC3M` | Regulated 3.0 V keyboard rail |
-| 28 | `-LED_FNLOCK` | LED sink driver through 3.9 kOhm |
-| 29 | `-LED_MUTE` | LED sink driver through 3.9 kOhm |
-| 30 | `-LED_MICMUTE` | LED sink driver through 3.9 kOhm |
-| 31 | `-HOTKEY` | HolyIOT pad 2 / `P1.11`, active-low with pull-up |
-| 32 | GND | Ground plane |
-| 33 | `-LED_CAPSLOCK` | LED sink driver through 3.9 kOhm |
-| 34 | GND | Ground plane |
-| 35 | `TP4LEFT` | HolyIOT pad 44 / `P0.08`, active-low with pull-up |
-| 36 | `TP4RIGHT` | HolyIOT pad 45 / `P0.06`, active-low with pull-up |
-| 37 | `TP4MIDDLE` | HolyIOT pad 46 / `P0.26`, active-low with pull-up |
-| 38 | `KBD_ID` | Intentionally leave unconnected in Revision B |
+| 27 | `VCC` | Universal core pin 56 / daughter pad 5 |
+| 28 | `-LED_FNLOCK` | Universal core pin 46 / daughter pad 15 |
+| 29 | `-LED_MUTE` | Universal core pin 47 / daughter pad 14 |
+| 30 | `-LEDMICMUTE` | Universal core pin 48 / daughter pad 13 |
+| 31 | `-HOTKEY` | Universal core pin 28 / daughter pad 33 |
+| 32 | GND | Universal core pin 55 / daughter pad 6 |
+| 33 | `-LED_CAPSLOCK` | Universal core pin 49 / daughter pad 12 |
+| 34 | GND | Universal core pin 58 / daughter pad 3 |
+| 35 | `TP4LEFT` | Universal core pin 30 / daughter pad 31 |
+| 36 | `TP4RIGHT` | Universal core pin 31 / daughter pad 30 |
+| 37 | `TP4MIDDLE` | Universal core pin 32 / daughter pad 29 |
+| 38 | `KBD_ID` | Universal core pin 33 / daughter pad 28; core leaves unimplemented until characterized |
 | 39-40 | NC | Outside the 36-contact cable; leave unconnected |
 | 41-42 | Connector shield | Ground plane |
 
-The matrix nets terminate at the HolyIOT pins defined in
-[`shared-module-wiring.md`](shared-module-wiring.md) and are shared with the
-alternative T430 connector. Install only one keyboard at a time.
+The separate T470 J37 TrackPoint/backlight connector maps as follows:
+
+| J37 pin | Signal | Universal core pin | Universal daughter-board pad |
+| ---: | --- | ---: | ---: |
+| 1 | `TP4_DATA` | 37 | 24 |
+| 2 | `+5V` | 42 | 19 |
+| 3 | GND | 44 | 17 |
+| 4 | `TP4_RESET` | 41 | 20 |
+| 5 | `TP4MIDDLE` | 32 | 29 |
+| 6 | `TP4RIGHT` | 31 | 30 |
+| 7 | `TP4LEFT` | 30 | 31 |
+| 8 | `+5V` | 43 | 18 |
+| 9 | `TP4_CLOCK` | 39 | 22 |
+| 10 | `BL_5V` | 51 | 10 |
+| 11 | `KBD_BL_PWM` | 50 | 11 |
+| 12 | `-KBD_BL_DTCT` | 35 | 26 |
+| 13-14 | Ground tabs | GND plane | GND plane |
+
+The five LED outputs are distinct core-board sink channels. Do not merge
+T430 `-LEDPWR` with T470 `-LED_FNLOCK`. The T470 keyboard FFC maps its four
+LED signals to the universal interface as follows:
+
+| T470 FPC1 | Signal | Universal core pin | Universal daughter-board pad |
+| ---: | --- | ---: | ---: |
+| 28 | `-LED_FNLOCK` | 46 | 15 |
+| 29 | `-LED_MUTE` | 47 | 14 |
+| 30 | `-LEDMICMUTE` | 48 | 13 |
+| 33 | `-LED_CAPSLOCK` | 49 | 12 |
+
+The matrix nets cross the universal FFC and terminate at the HolyIOT pins
+defined in [`shared-module-wiring.md`](shared-module-wiring.md). Install only
+one keyboard adapter at a time.
+
+Tie universal `ADAPTER_ID` (core pin 34 / daughter pad 27) to GND on the T470
+adapter. Leave it open on the T430 adapter. This strap is board-local and does
+not connect to either keyboard cable.
 
 `TP4LEFT`, `TP4RIGHT`, and `TP4MIDDLE` are read directly by the nRF52840 in
 Revision B. Do not bridge them to another TrackPoint-button input path. No
