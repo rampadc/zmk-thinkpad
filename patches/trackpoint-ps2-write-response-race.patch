@@ -1,0 +1,25 @@
+diff --git a/src/drivers/ps2/ps2_uart.c b/src/drivers/ps2/ps2_uart.c
+--- a/src/drivers/ps2/ps2_uart.c
++++ b/src/drivers/ps2/ps2_uart.c
+@@ -804,13 +804,19 @@ int ps2_uart_write_byte_await_response(const struct device *dev, uint8_t byte) {
+     struct ps2_uart_data *data = dev->data;
+     int err;
+ 
++    // Arm response capture before transmitting. A TrackPoint can begin its
++    // 0xFA response immediately after the host-to-device frame; arming after
++    // write_byte_blocking() races that response into the ordinary read queue.
++    k_sem_reset(&data->write_awaits_resp_sem);
++    data->write_awaits_resp_byte = 0x0;
++    data->write_awaits_resp = true;
++
+     err = ps2_uart_write_byte_blocking(dev, byte);
+     if (err) {
++        data->write_awaits_resp = false;
+         return err;
+     }
+-
+-    data->write_awaits_resp = true;
+ 
+     err = k_sem_take(&data->write_awaits_resp_sem, PS2_UART_TIMEOUT_WRITE_AWAIT_RESPONSE);
+ 
+     uint8_t resp_byte = data->write_awaits_resp_byte;

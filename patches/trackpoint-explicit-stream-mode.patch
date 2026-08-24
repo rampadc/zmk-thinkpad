@@ -1,0 +1,43 @@
+diff --git a/src/drivers/input/input_mouse_ps2.c b/src/drivers/input/input_mouse_ps2.c
+--- a/src/drivers/input/input_mouse_ps2.c
++++ b/src/drivers/input/input_mouse_ps2.c
+@@ -54,6 +54,9 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
+ #define MOUSE_PS2_CMD_ENABLE_REPORTING "\xf4"
+ #define MOUSE_PS2_CMD_ENABLE_REPORTING_RESP_LEN 0
+ 
++#define MOUSE_PS2_CMD_SET_STREAM_MODE "\xea"
++#define MOUSE_PS2_CMD_SET_STREAM_MODE_RESP_LEN 0
++
+ #define MOUSE_PS2_CMD_DISABLE_REPORTING "\xf5"
+ #define MOUSE_PS2_CMD_DISABLE_REPORTING_RESP_LEN 0
+ 
+@@ -770,6 +773,16 @@ int zmk_mouse_ps2_activity_reporting_enable(const struct device *dev) {
+     return 0;
+ }
+ 
++int zmk_mouse_ps2_set_stream_mode(const struct device *dev) {
++    struct zmk_mouse_ps2_send_cmd_resp resp = zmk_mouse_ps2_send_cmd(
++        dev, MOUSE_PS2_CMD_SET_STREAM_MODE, sizeof(MOUSE_PS2_CMD_SET_STREAM_MODE), NULL,
++        MOUSE_PS2_CMD_SET_STREAM_MODE_RESP_LEN, false);
++    if (resp.err) {
++        LOG_ERR("Could not explicitly select PS/2 stream mode: %s", resp.err_msg);
++    }
++    return resp.err;
++}
++
+ int zmk_mouse_ps2_activity_reporting_disable(const struct device *dev) {
+     struct zmk_mouse_ps2_data *data = dev->data;
+     const struct zmk_mouse_ps2_config *config = dev->config;
+@@ -1810,7 +1824,11 @@ static void zmk_mouse_ps2_init_thread(int dev_ptr, int unused) {
+         return;
+     }
+ 
+-    LOG_INF("Enabling data reporting and ps2 callback...");
++    LOG_INF("Selecting stream mode, then enabling data reporting and ps2 callback...");
++    err = zmk_mouse_ps2_set_stream_mode(dev);
++    if (err) {
++        return;
++    }
+     err = zmk_mouse_ps2_activity_reporting_enable(dev);
+     if (err) {
+         LOG_ERR("Could not activate ps2 callback: %d", err);

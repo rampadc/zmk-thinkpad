@@ -1,0 +1,70 @@
+diff --git a/src/drivers/input/input_mouse_ps2.c b/src/drivers/input/input_mouse_ps2.c
+index a5c811b..a8fcb65 100644
+--- a/src/drivers/input/input_mouse_ps2.c
++++ b/src/drivers/input/input_mouse_ps2.c
+@@ -573,17 +573,6 @@ void zmk_mouse_ps2_activity_click_buttons(const struct device *dev,
+         buttons_released++;
+     }
+ 
+-    // Then we check if this is likely a transmission error
+-    if (buttons_pressed > 1 || buttons_released > 1) {
+-        LOG_WRN("Ignoring button presses: Received %d button presses "
+-                "and %d button releases in one packet. "
+-                "Probably tranmission error.",
+-                buttons_pressed, buttons_released);
+-
+-        zmk_mouse_ps2_activity_abort_cmd(dev, "Multiple button presses");
+-        return;
+-    }
+-
+     if (config->disable_clicking != true) {
+         // If it wasn't, we actually send the events.
+         if (buttons_pressed > 0 || buttons_released > 0) {
+@@ -596,41 +585,43 @@ void zmk_mouse_ps2_activity_click_buttons(const struct device *dev,
+                 input_report_key(data->dev, INPUT_BTN_0, 1,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_l_is_held = true;
++                buttons_need_reporting--;
+             } else if (button_l_released) {
+ 
+                 input_report_key(data->dev, INPUT_BTN_0, 0,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_l_is_held = false;
++                buttons_need_reporting--;
+             }
+ 
+-            buttons_need_reporting--;
+-
+             // Right button
+             if (button_r_pressed) {
+ 
+                 input_report_key(data->dev, INPUT_BTN_1, 1,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_r_is_held = true;
++                buttons_need_reporting--;
+             } else if (button_r_released) {
+ 
+                 input_report_key(data->dev, INPUT_BTN_1, 0,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_r_is_held = false;
++                buttons_need_reporting--;
+             }
+ 
+-            buttons_need_reporting--;
+-
+             // Middle Button
+             if (button_m_pressed) {
+ 
+                 input_report_key(data->dev, INPUT_BTN_2, 1,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_m_is_held = true;
++                buttons_need_reporting--;
+             } else if (button_m_released) {
+ 
+                 input_report_key(data->dev, INPUT_BTN_2, 0,
+                                  buttons_need_reporting == 1 ? true : false, K_FOREVER);
+                 data->button_m_is_held = false;
++                buttons_need_reporting--;
+             }
+         }
+     }
