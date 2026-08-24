@@ -62,9 +62,9 @@
 &t430_power_led { gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>; };
 &t430_mute_led { gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>; };
 &t430_micmute_led { gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>; };
-&t430_profile_1_led { gpios = <&gpio0 25 GPIO_ACTIVE_LOW>; };
+&t430_profile_1_led { gpios = <&gpio1 8 GPIO_ACTIVE_LOW>; };
 &t430_profile_2_led { gpios = <&gpio0 11 GPIO_ACTIVE_LOW>; };
-&t430_profile_3_led { gpios = <&gpio1 8 GPIO_ACTIVE_LOW>; };
+&t430_profile_3_led { gpios = <&gpio0 25 GPIO_ACTIVE_LOW>; };
 
 &trackpoint {
     rst-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;

@@ -45,6 +45,6 @@ zephyr_library_sources_ifdef(CONFIG_THINKPAD_T430_REVA_BACKLIGHT
   src/drivers/led/thinkpad_reva_backlight.c)
 zephyr_library_sources_ifdef(CONFIG_THINKPAD_T430_REVA_USB_BOOT_TRIGGER
   src/thinkpad_t430_reva_usb_boot_trigger.c)
-zephyr_library_sources_ifdef(CONFIG_THINKPAD_T470_MATRIX_DISCOVERY
-  src/thinkpad_t470_matrix_discovery.c)
+zephyr_library_sources_ifdef(CONFIG_THINKPAD_MATRIX_DISCOVERY
+  src/thinkpad_matrix_discovery.c)
 zephyr_library_sources_ifdef(CONFIG_THINKPAD_T470_STATUS src/thinkpad_t470_status.c)

@@ -5,7 +5,7 @@ menuconfig THINKPAD_T430_STATUS
     default y if SHIELD_THINKPAD_T430 || SHIELD_THINKPAD_T430_REVA
     depends on ZMK_BLE && ZMK_USB
     help
-      Drives the T430 power-button LED with USB/BLE connection status, drives
+      Drives the T430 power-button LED steadily while USB or BLE is connected, drives
       three BLE-profile indicators, and mirrors the dedicated
       speaker/microphone mute buttons to their LEDs.
 
@@ -25,13 +25,21 @@ config THINKPAD_T430_REVA_USB_BOOT_TRIGGER
       Reboots into the UF2 bootloader when the USB CDC ACM control port is
       opened at 1200 baud. This permits button-free firmware updates.
 
-menuconfig THINKPAD_T470_MATRIX_DISCOVERY
-    bool "ThinkPad T470 matrix discovery logging"
+menuconfig THINKPAD_MATRIX_DISCOVERY
+    bool "ThinkPad keyboard matrix discovery logging"
     default n
     depends on LOG
     help
-      Guides the user through the US T470 layout and records each raw
-      DRV/SENSE coordinate. Enable only when remapping another keyboard.
+      Guides the user through the selected ThinkPad layout and records each
+      matrix or direct-input position. Enable only for matrix bring-up.
+
+config THINKPAD_MATRIX_DISCOVERY_T430
+    bool
+    default y if THINKPAD_MATRIX_DISCOVERY && (SHIELD_THINKPAD_T430 || SHIELD_THINKPAD_T430_REVA)
+
+config THINKPAD_MATRIX_DISCOVERY_T470
+    bool
+    default y if THINKPAD_MATRIX_DISCOVERY && SHIELD_THINKPAD_T470
 
 menuconfig THINKPAD_T470_STATUS
     bool "ThinkPad T470 BLE profile LEDs"

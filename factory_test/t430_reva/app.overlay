@@ -1,0 +1,41 @@
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+    factory_rows: factory_rows {
+        compatible = "gpio-leds";
+        row0 { gpios = <&gpio1 3 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row1 { gpios = <&gpio0 19 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row2 { gpios = <&gpio1 9 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row3 { gpios = <&gpio0 31 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row4 { gpios = <&gpio1 10 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row5 { gpios = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row6 { gpios = <&gpio0 29 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row7 { gpios = <&gpio0 5 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row8 { gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row9 { gpios = <&gpio1 0 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row10 { gpios = <&gpio0 23 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row11 { gpios = <&gpio1 2 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row12 { gpios = <&gpio1 7 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row13 { gpios = <&gpio0 24 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row14 { gpios = <&gpio1 6 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+        row15 { gpios = <&gpio1 5 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>; };
+    };
+
+    factory_cols: factory_cols {
+        compatible = "gpio-leds";
+        col0 { gpios = <&gpio0 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col1 { gpios = <&gpio0 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col2 { gpios = <&gpio0 30 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col3 { gpios = <&gpio0 28 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col4 { gpios = <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col5 { gpios = <&gpio1 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col6 { gpios = <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        col7 { gpios = <&gpio0 21 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+    };
+
+    factory_direct: factory_direct {
+        compatible = "gpio-leds";
+        fn { gpios = <&gpio1 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+        power { gpios = <&gpio0 22 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>; };
+    };
+};

@@ -16,6 +16,7 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
+		zephyr,console = &cdc_acm_uart0;
 	};
 
 	/* Labels retained so the DK-oriented T430 base overlay can be shared. */

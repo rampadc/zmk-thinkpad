@@ -38,7 +38,6 @@ static const struct gpio_dt_spec profile_leds[] = {
 static struct k_work_delayable status_work;
 static struct k_work_delayable profile_status_work;
 static bool indicators_ready;
-static bool normal_blink_on;
 static bool profile_blink_on;
 static bool identifying_usb;
 static bool ble_requested;
@@ -90,36 +89,9 @@ static void set_all_profile_leds(bool on) {
 }
 
 static void show_normal_status(void) {
-    bool next_on;
-    k_timeout_t next_delay;
-
-    if (!ble_requested) {
-        if (zmk_usb_is_hid_ready()) {
-            set_led(&power_led, true);
-            normal_blink_on = true;
-            return;
-        }
-
-        /* USB selected but not enumerated: one short pulse per second. */
-        next_on = !normal_blink_on;
-        next_delay = next_on ? K_MSEC(120) : K_MSEC(880);
-    } else if (zmk_ble_active_profile_is_connected()) {
-        set_led(&power_led, true);
-        normal_blink_on = true;
-        return;
-    } else if (zmk_ble_active_profile_is_open()) {
-        /* An empty profile is advertising for a new host. */
-        next_on = !normal_blink_on;
-        next_delay = K_MSEC(150);
-    } else {
-        /* A bonded profile is disconnected and trying to reconnect. */
-        next_on = !normal_blink_on;
-        next_delay = next_on ? K_MSEC(200) : K_MSEC(800);
-    }
-
-    normal_blink_on = next_on;
-    set_led(&power_led, next_on);
-    schedule_status(next_delay);
+    /* Connection/pairing animation belongs exclusively to the profile LEDs. */
+    set_led(&power_led,
+            zmk_usb_is_hid_ready() || zmk_ble_active_profile_is_connected());
 }
 
 static void status_work_handler(struct k_work *work) {
@@ -173,7 +145,6 @@ static void refresh_power_status(void) {
         return;
     }
 
-    normal_blink_on = false;
     schedule_status(K_NO_WAIT);
 }
 
