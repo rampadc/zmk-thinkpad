@@ -101,9 +101,9 @@
                 &trans &trans &trans &trans &kp LC(PAUSE_BREAK)
                 &trans &trans &trans &trans &trans &trans
 
-                /* Fn+Space cycles off, 50%, and 100%; other bottom keys pass through. */
+                /* Rev A backlight bring-up is disabled until its power rail is validated. */
                 &trans &trans &trans &trans
-                &bl BL_CYCLE &trans &trans &trans
+                &none &trans &trans &trans
                 &trans &trans &trans &trans
 
                 /* DK recovery controls remain active on every layer. */

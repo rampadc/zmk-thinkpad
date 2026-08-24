@@ -1,5 +1,10 @@
 # Deferred Revision B changes
 
+The consolidated electrical, firmware, assembly, and fixture lessons from the
+first assembled board are recorded in
+[`../Rev B/rev-a-bringup-learnings.md`](../Rev%20B/rev-a-bringup-learnings.md).
+Treat its Revision B requirements and release gates as part of this checklist.
+
 Do not begin Revision B schematic or PCB work until the assembled
 [Revision A board](t430-revA.pdf) has been electrically tested and successfully
 flashed. Revision A retains the seven individual SOT-23 BSS138 devices in its

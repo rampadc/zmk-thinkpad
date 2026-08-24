@@ -68,6 +68,7 @@
 
 &trackpoint {
     rst-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+    tp-y-invert;
 };
 
 &keyboard_backlight {
