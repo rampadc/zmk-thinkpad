@@ -1,6 +1,6 @@
-# ThinkPad ZMK
+# ZMK-ThinkPad
 
-ThinkPad ZMK is open firmware and controller hardware for turning classic
+ZMK-ThinkPad is open firmware and controller hardware for turning classic
 ThinkPad keyboards into standalone USB and Bluetooth keyboards. It is built on
 [ZMK](https://zmk.dev/) and targets the Nordic nRF52840.
 
@@ -114,4 +114,4 @@ first installation and recovery.
 
 Architecture, specifications, hardware records, and programming procedures are
 published in the
-[ThinkPad ZMK documentation](https://congx.dev/zmk-thinkpad/).
+[ZMK-ThinkPad documentation](https://congx.dev/zmk-thinkpad/).

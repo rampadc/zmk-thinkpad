@@ -1,13 +1,13 @@
 ---
 title: Companion app
-description: Draft requirements for a local desktop application that manages ThinkPad ZMK keyboards.
+description: Draft requirements for a local desktop application that manages ZMK-ThinkPad keyboards.
 ---
 
 # Companion app specification
 
 > **Status: proposal.** No companion app or management protocol exists yet.
 
-The companion app manages ThinkPad ZMK keyboards on Windows, macOS, and Linux.
+The companion app manages ZMK-ThinkPad keyboards on Windows, macOS, and Linux.
 It is not part of the first firmware or hardware release. This page records
 the boundaries for later work; it is not an implementation guide.
 

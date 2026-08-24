@@ -2,12 +2,12 @@
 sidebar_position: 1
 slug: /
 title: Documentation
-description: Current status, architecture, specifications, and hardware records for ThinkPad ZMK.
+description: Current status, architecture, specifications, and hardware records for ZMK-ThinkPad.
 ---
 
-# ThinkPad ZMK documentation
+# ZMK-ThinkPad documentation
 
-ThinkPad ZMK is under development and has not reached a public release. These
+ZMK-ThinkPad is under development and has not reached a public release. These
 pages record the current firmware, tested hardware, specifications, and work in
 progress.
 

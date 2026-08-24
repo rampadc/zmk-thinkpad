@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'ThinkPad ZMK',
+  title: 'ZMK-ThinkPad',
   tagline: 'Classic ThinkPad keyboards, made wireless and open.',
   favicon: 'img/favicon.svg',
   future: {v4: true},
@@ -36,8 +36,8 @@ const config: Config = {
     metadata: [{name: 'keywords', content: 'ThinkPad, ZMK, mechanical keyboard, TrackPoint, nRF52840'}],
     colorMode: {defaultMode: 'dark', respectPrefersColorScheme: true},
     navbar: {
-      title: 'THINKPAD / ZMK',
-      logo: {alt: 'ThinkPad ZMK TrackPoint mark', src: 'img/trackpoint.svg'},
+      title: 'ZMK-ThinkPad',
+      logo: {alt: 'ZMK-ThinkPad TrackPoint mark', src: 'img/trackpoint.svg'},
       items: [
         {type: 'docSidebar', sidebarId: 'docsSidebar', position: 'left', label: 'Docs'},
         {href: 'https://github.com/rampadc/zmk-thinkpad', label: 'GitHub', position: 'right'},

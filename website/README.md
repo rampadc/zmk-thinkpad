@@ -1,4 +1,4 @@
-# ThinkPad ZMK website
+# ZMK-ThinkPad website
 
 The Docusaurus site publishes the repository's `docs/` directory at the site
 root.
