@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: MIT
 
-# The fabricated T430 Revision A board inverts its TrackPoint RESET GPIO with
-# Q2. The pinned upstream driver discards devicetree GPIO polarity, so apply a
-# small, tracked compatibility patch only when building that shield. This keeps
-# fresh West/CI checkouts reproducible and leaves the T470 build untouched.
+# Revision A needs tracked fixes to the pinned upstream TrackPoint driver for
+# reset polarity, power-on reset, response timing, buffering, stream mode, and
+# button synchronization. Apply them only to the T430 and T60 Revision A
+# shields. This keeps fresh West/CI checkouts reproducible and leaves the T470
+# build untouched.
 if("thinkpad_t430_reva" IN_LIST SHIELD_AS_LIST OR
    "thinkpad_t60_reva" IN_LIST SHIELD_AS_LIST)
   set(trackpoint_driver_dir

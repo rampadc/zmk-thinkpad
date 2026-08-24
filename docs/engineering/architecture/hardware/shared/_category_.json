@@ -1,0 +1,8 @@
+{
+  "label": "Shared hardware",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Controller circuitry and interfaces shared across keyboard models."
+  }
+}

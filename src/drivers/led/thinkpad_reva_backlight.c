@@ -18,9 +18,38 @@ struct reva_backlight_config {
     uint32_t startup_delay_ms;
 };
 
+static int reva_backlight_set_brightness(const struct device *dev, uint32_t led,
+                                         uint8_t value);
+
 struct reva_backlight_data {
     bool enabled;
+#if defined(CONFIG_THINKPAD_T430_REVA_BACKLIGHT_TEST)
+    const struct device *dev;
+    struct k_work_delayable test_work;
+#endif
 };
+
+#if defined(CONFIG_THINKPAD_T430_REVA_BACKLIGHT_TEST)
+static void reva_backlight_test_work(struct k_work *work) {
+    struct k_work_delayable *delayable = k_work_delayable_from_work(work);
+    struct reva_backlight_data *data =
+        CONTAINER_OF(delayable, struct reva_backlight_data, test_work);
+    const struct reva_backlight_config *config = data->dev->config;
+
+    /* Polarity probe: establish a steady high PWM level before connecting BL_5V. */
+    if (pwm_set_pulse_dt(&config->pwm, config->pwm.period) != 0) {
+        return;
+    }
+    k_msleep(100);
+    if (gpio_pin_set_dt(&config->enable, 1) != 0) {
+        pwm_set_pulse_dt(&config->pwm, 0);
+        return;
+    }
+    k_msleep(5000);
+    gpio_pin_set_dt(&config->enable, 0);
+    pwm_set_pulse_dt(&config->pwm, 0);
+}
+#endif
 
 static int reva_backlight_set_brightness(const struct device *dev, uint32_t led,
                                          uint8_t value) {
@@ -52,7 +81,11 @@ static int reva_backlight_set_brightness(const struct device *dev, uint32_t led,
         }
 
         data->enabled = true;
+#if defined(CONFIG_THINKPAD_T430_REVA_BACKLIGHT_TEST)
+        k_msleep(5000);
+#else
         k_msleep(config->startup_delay_ms);
+#endif
     }
 
     err = pwm_set_pulse_dt(&config->pwm,
@@ -87,7 +120,17 @@ static int reva_backlight_init(const struct device *dev) {
     }
 
     data->enabled = false;
-    return pwm_set_pulse_dt(&config->pwm, 0);
+    err = pwm_set_pulse_dt(&config->pwm, 0);
+    if (err) {
+        return err;
+    }
+
+#if defined(CONFIG_THINKPAD_T430_REVA_BACKLIGHT_TEST)
+    data->dev = dev;
+    k_work_init_delayable(&data->test_work, reva_backlight_test_work);
+    k_work_schedule(&data->test_work, K_SECONDS(10));
+#endif
+    return 0;
 }
 
 static const struct led_driver_api reva_backlight_api = {

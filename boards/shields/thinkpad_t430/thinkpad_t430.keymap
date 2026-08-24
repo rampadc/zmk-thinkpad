@@ -101,9 +101,13 @@
                 &trans &trans &trans &trans &kp LC(PAUSE_BREAK)
                 &trans &trans &trans &trans &trans &trans
 
-                /* Rev A backlight bring-up is disabled until its power rail is validated. */
+                /* Rev A release builds keep the unvalidated backlight disabled. */
                 &trans &trans &trans &trans
+#if defined(THINKPAD_T430_REVA_BACKLIGHT_TEST_KEYMAP)
+                &bl BL_SET 1 &trans &trans &trans
+#else
                 &none &trans &trans &trans
+#endif
                 &trans &trans &trans &trans
 
                 /* DK recovery controls remain active on every layer. */

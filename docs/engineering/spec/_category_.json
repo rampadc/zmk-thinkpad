@@ -1,0 +1,9 @@
+{
+  "label": "SPEC",
+  "position": 2,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Authoritative behavioral and product specifications."
+  }
+}

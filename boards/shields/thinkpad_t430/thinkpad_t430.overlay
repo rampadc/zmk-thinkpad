@@ -18,8 +18,8 @@
 
     /*
      * The T430 matrix has sixteen DRV outputs and eight active-low SENSE
-     * inputs. DRVn/SENSEn names and connector pins are documented in the
-     * README wiring table.
+     * inputs. DRVn/SENSEn names follow the measured connector map used by this
+     * shield.
      */
     kscan_matrix: kscan_matrix {
         compatible = "zmk,kscan-gpio-matrix";

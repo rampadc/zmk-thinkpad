@@ -17,6 +17,16 @@ config THINKPAD_T430_REVA_BACKLIGHT
       Drives the Revision A backlight PWM and sequences its active-high 5 V
       rail enable so PWM is never applied before the rail has stabilized.
 
+config THINKPAD_T430_REVA_BACKLIGHT_TEST
+    bool "ThinkPad T430 Revision A staged backlight test"
+    default n
+    depends on THINKPAD_T430_REVA_BACKLIGHT && LOG
+    help
+      Runs an automatic polarity probe ten seconds after boot: drive PWM high,
+      wait 100 ms, enable BL_5V for five seconds, then switch both off. Normal
+      brightness commands also wait five seconds after enabling BL_5V. Never
+      enable this in release builds.
+
 config THINKPAD_T430_REVA_USB_BOOT_TRIGGER
     bool "ThinkPad T430 Revision A 1200-baud UF2 trigger"
     default y if SHIELD_THINKPAD_T430_REVA || SHIELD_THINKPAD_T60_REVA

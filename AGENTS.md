@@ -1,7 +1,7 @@
 # ThinkPad firmware requirements
 
 Before changing USB/BLE profile selection, pairing, or profile LED behavior,
-read and follow [`docs/transport-profile-contract.md`](docs/transport-profile-contract.md).
+read and follow [`docs/engineering/spec/transport-profile-contract.md`](docs/engineering/spec/transport-profile-contract.md).
 
 The contract is authoritative. Do not infer user intent from ZMK's currently
 usable endpoint: USB may be the effective fallback while BLE remains the
@@ -17,7 +17,13 @@ the behavior as complete.
 
 Normal development flashes must preserve the nRF52840 settings partition and
 its BLE bonds. Read and follow the flashing procedure in
-[`docs/flashing.md`](docs/flashing.md).
+[`docs/engineering/architecture/programming/dk-and-serial-debugging.md`](docs/engineering/architecture/programming/dk-and-serial-debugging.md).
+
+For the custom Holyiot Revision A PCB, including the `thinkpad_t430_reva` and
+`thinkpad_t60_reva` shields, read
+[`docs/engineering/architecture/programming/revision-a-programming.md`](docs/engineering/architecture/programming/revision-a-programming.md) before building or flashing.
+Use its USB/UF2 workflow for normal iteration and its STM32F429I-DISCO ST-LINK
+workflow only for first installation or recovery.
 
 - By default, flash with J-Link Commander's `loadfile` command.
 - Never copy a HEX file to `/Volumes/JLINK` for an ordinary firmware update.

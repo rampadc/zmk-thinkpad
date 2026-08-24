@@ -1,0 +1,8 @@
+{
+  "label": "Programming & debugging",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "First-time programming, USB firmware updates, J-Link workflows, and serial debugging established during Revision A."
+  }
+}

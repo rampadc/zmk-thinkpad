@@ -1,0 +1,8 @@
+{
+  "label": "Revision B",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Unbuilt design work for the common Revision B core, power path, and adapter interface."
+  }
+}

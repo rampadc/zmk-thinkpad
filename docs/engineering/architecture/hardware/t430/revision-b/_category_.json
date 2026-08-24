@@ -1,0 +1,8 @@
+{
+  "label": "Revision B",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Unbuilt T430 adapter design for the shared Revision B controller."
+  }
+}
