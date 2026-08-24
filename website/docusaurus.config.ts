@@ -7,7 +7,7 @@ const config: Config = {
   tagline: 'Classic ThinkPad keyboards, made wireless and open.',
   favicon: 'img/favicon.svg',
   future: {v4: true},
-  url: 'https://rampadc.github.io',
+  url: 'https://congx.dev',
   baseUrl: '/zmk-thinkpad/',
   organizationName: 'rampadc',
   projectName: 'zmk-thinkpad',

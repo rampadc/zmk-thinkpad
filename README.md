@@ -4,11 +4,17 @@ ThinkPad ZMK is open firmware and controller hardware for turning classic
 ThinkPad keyboards into standalone USB and Bluetooth keyboards. It is built on
 [ZMK](https://zmk.dev/) and targets the Nordic nRF52840.
 
-The firmware supports T430 and T470 keyboards on an nRF52840 development kit.
-The T430 target includes TrackPoint support; the current T470 target is limited
-to the keyboard matrix. The custom Revision A controller supports T430 and T60
-keyboards, including their TrackPoints. Revision A established the project's
-first-time programming, USB/UF2 update, and serial-debugging workflows.
+Supported targets:
+
+| Keyboard | Hardware | Shield | Current support |
+| --- | --- | --- | --- |
+| T430 | nRF52840 DK | `thinkpad_t430` | Keyboard and TrackPoint |
+| T470 | nRF52840 DK | `thinkpad_t470` | Keyboard; TrackPoint is not yet enabled |
+| T430 | Custom Revision A | `thinkpad_t430_reva` | Keyboard and TrackPoint |
+| T60/T61 | Custom Revision A | `thinkpad_t60_reva` | Keyboard and TrackPoint, including all three buttons |
+
+Revision A established the project's first-time programming, USB/UF2 update,
+and serial-debugging workflows.
 
 Revision B is the next planned hardware phase, beginning with a T470 adapter.
 It has not been built.
@@ -69,12 +75,15 @@ shield=thinkpad_t470
 
 The resulting image is `.zmk/build/<shield>/zephyr/zmk.hex`.
 
-For the custom T430 Revision A controller, the build and USB update are wrapped
-by:
+For a T430 on the custom Revision A controller, this helper builds and installs
+the firmware over USB:
 
 ```sh
 tools/flash-t430-reva
 ```
+
+For T60/T61, build the `thinkpad_t60_reva` shield using the command in the
+[Revision A programming guide](docs/engineering/architecture/programming/revision-a-programming.md).
 
 ## Flash
 
@@ -105,4 +114,4 @@ first installation and recovery.
 
 Architecture, specifications, hardware records, and programming procedures are
 published in the
-[ThinkPad ZMK documentation](https://rampadc.github.io/zmk-thinkpad/).
+[ThinkPad ZMK documentation](https://congx.dev/zmk-thinkpad/).
