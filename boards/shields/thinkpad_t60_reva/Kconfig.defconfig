@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+
+if SHIELD_THINKPAD_T60_REVA
+
+config ZMK_KEYBOARD_NAME
+    string
+    default "T60 RevA"
+
+endif

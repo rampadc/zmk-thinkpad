@@ -4,7 +4,8 @@
 # Q2. The pinned upstream driver discards devicetree GPIO polarity, so apply a
 # small, tracked compatibility patch only when building that shield. This keeps
 # fresh West/CI checkouts reproducible and leaves the T470 build untouched.
-if("thinkpad_t430_reva" IN_LIST SHIELD_AS_LIST)
+if("thinkpad_t430_reva" IN_LIST SHIELD_AS_LIST OR
+   "thinkpad_t60_reva" IN_LIST SHIELD_AS_LIST)
   set(trackpoint_driver_dir
     "${ZEPHYR_KB_ZMK_PS2_MOUSE_TRACKPOINT_DRIVER_MODULE_DIR}")
   set(trackpoint_reset_patch

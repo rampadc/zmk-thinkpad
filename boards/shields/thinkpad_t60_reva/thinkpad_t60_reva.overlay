@@ -1,0 +1,48 @@
+/*
+ * ThinkPad T60/T61 keyboard on the T430 Revision A Holyiot controller.
+ *
+ * The matrix and PS/2 pinout are shared. Unlike T430, Fn is an isolated
+ * switch between connector pins 1 and 36; firmware holds the existing pin-36
+ * low-side sink active as HOTKEY RTN.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "../thinkpad_t430_reva/thinkpad_t430_reva.overlay"
+
+/* T60/T61 differs from T430 at the Windows/Menu portion of the matrix.
+ * Keep the shared physical ordering while selecting the documented T60
+ * coordinates for Left GUI (DRV11/SENSE2) and Print Screen (DRV13/SENSE0). */
+&default_transform {
+    map = <
+        RC(16,1)
+        RC(10,4) RC(10,3) RC(10,2) RC(10,6) RC(10,5)
+
+        RC(0,5)
+        RC(1,0) RC(2,0) RC(2,3) RC(2,5)
+        RC(8,5) RC(5,5) RC(6,3) RC(6,0)
+        RC(8,0) RC(8,1) RC(10,1) RC(9,1)
+        RC(11,1) RC(11,0) RC(10,0) RC(12,1)
+        RC(11,6) RC(11,7)
+
+        RC(0,0) RC(0,1) RC(1,1) RC(2,1) RC(3,1)
+        RC(3,0) RC(4,0) RC(4,1) RC(5,1) RC(6,1)
+        RC(7,1) RC(7,0) RC(5,0) RC(8,3)
+
+        RC(0,3) RC(0,2) RC(1,2) RC(2,2) RC(3,2)
+        RC(3,3) RC(4,3) RC(4,2) RC(5,2) RC(6,2)
+        RC(7,2) RC(7,3) RC(5,3) RC(8,4)
+
+        RC(1,3) RC(0,4) RC(1,4) RC(2,4) RC(3,4)
+        RC(3,5) RC(4,5) RC(4,4) RC(5,4) RC(6,4)
+        RC(7,4) RC(7,5) RC(8,6)
+
+        RC(14,3) RC(0,6) RC(1,6) RC(2,6) RC(3,6)
+        RC(3,7) RC(4,7) RC(4,6) RC(5,6) RC(6,6)
+        RC(7,7) RC(14,6)
+
+        RC(16,0) RC(15,0) RC(11,2) RC(13,5)
+        RC(8,7) RC(13,7) RC(13,0) RC(15,6)
+        RC(12,7) RC(12,5) RC(10,7) RC(9,7)
+    >;
+};

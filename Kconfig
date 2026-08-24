@@ -2,7 +2,7 @@
 
 menuconfig THINKPAD_T430_STATUS
     bool "ThinkPad T430 indicator LEDs"
-    default y if SHIELD_THINKPAD_T430 || SHIELD_THINKPAD_T430_REVA
+    default y if SHIELD_THINKPAD_T430 || SHIELD_THINKPAD_T430_REVA || SHIELD_THINKPAD_T60_REVA
     depends on ZMK_BLE && ZMK_USB
     help
       Drives the T430 power-button LED steadily while USB or BLE is connected, drives
@@ -11,7 +11,7 @@ menuconfig THINKPAD_T430_STATUS
 
 config THINKPAD_T430_REVA_BACKLIGHT
     bool "ThinkPad T430 Revision A sequenced backlight"
-    default y if SHIELD_THINKPAD_T430_REVA
+    default y if SHIELD_THINKPAD_T430_REVA || SHIELD_THINKPAD_T60_REVA
     depends on PWM && GPIO
     help
       Drives the Revision A backlight PWM and sequences its active-high 5 V
@@ -19,11 +19,18 @@ config THINKPAD_T430_REVA_BACKLIGHT
 
 config THINKPAD_T430_REVA_USB_BOOT_TRIGGER
     bool "ThinkPad T430 Revision A 1200-baud UF2 trigger"
-    default y if SHIELD_THINKPAD_T430_REVA
+    default y if SHIELD_THINKPAD_T430_REVA || SHIELD_THINKPAD_T60_REVA
     depends on SERIAL && UART_LINE_CTRL
     help
       Reboots into the UF2 bootloader when the USB CDC ACM control port is
       opened at 1200 baud. This permits button-free firmware updates.
+
+config THINKPAD_T60_HOTKEY_RETURN
+    bool
+    default y if SHIELD_THINKPAD_T60_REVA
+    help
+      Holds the Revision A connector pin 36 sink active so it acts as the
+      dedicated return for the T60/T61 Fn switch on connector pin 1.
 
 menuconfig THINKPAD_MATRIX_DISCOVERY
     bool "ThinkPad keyboard matrix discovery logging"

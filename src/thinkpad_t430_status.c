@@ -44,7 +44,9 @@ static bool ble_requested;
 static int64_t profile_identify_until;
 static int profile_identify_index = -1;
 static bool mute_on;
+#if !IS_ENABLED(CONFIG_THINKPAD_T60_HOTKEY_RETURN)
 static bool micmute_on;
+#endif
 
 #define PROFILE_IDENTIFY_DURATION_MS 5000
 #define USB_IDENTIFY_DURATION_MS 1000
@@ -211,8 +213,10 @@ static int t430_status_listener(const zmk_event_t *eh) {
             set_led(&mute_led, mute_on);
         } else if (key_event->keycode ==
                    HID_USAGE_CONSUMER_START_OR_STOP_MICROPHONE_CAPTURE) {
+#if !IS_ENABLED(CONFIG_THINKPAD_T60_HOTKEY_RETURN)
             micmute_on = !micmute_on;
             set_led(&micmute_led, micmute_on);
+#endif
         }
 
         return ZMK_EV_EVENT_BUBBLE;
@@ -258,13 +262,19 @@ static int thinkpad_t430_status_init(void) {
         }
     }
 
+#if IS_ENABLED(CONFIG_THINKPAD_T60_HOTKEY_RETURN)
+    /* T60/T61 Fn closes connector pin 1 to pin 36. Revision A's pin-36
+     * low-side LED sink must therefore remain asserted as HOTKEY RTN. */
+    set_led(&micmute_led, true);
+#endif
+
     k_work_init_delayable(&status_work, status_work_handler);
     k_work_init_delayable(&profile_status_work, profile_status_work_handler);
     indicators_ready = true;
     refresh_power_status();
     thinkpad_profile_register_listener(profile_command_listener);
 
-    LOG_INF("T430 power, mute, mic-mute, and BLE profile indicators initialized");
+    LOG_INF("ThinkPad power, mute, and BLE profile indicators initialized");
     return 0;
 }
 

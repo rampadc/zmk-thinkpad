@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT
+
+config SHIELD_THINKPAD_T60_REVA
+    def_bool $(shields_list_contains,thinkpad_t60_reva)

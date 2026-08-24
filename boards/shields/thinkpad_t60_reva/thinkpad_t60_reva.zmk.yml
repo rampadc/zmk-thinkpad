@@ -1,0 +1,8 @@
+file_format: "1"
+id: thinkpad_t60_reva
+name: ThinkPad T60 Revision A Holyiot
+type: shield
+url: https://github.com/rampadc/zmk-thinkpad
+features:
+  - keys
+  - pointer
