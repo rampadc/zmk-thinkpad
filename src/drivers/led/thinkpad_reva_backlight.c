@@ -61,6 +61,11 @@ static int reva_backlight_set_brightness(const struct device *dev, uint32_t led,
         return -EINVAL;
     }
 
+#if !defined(CONFIG_THINKPAD_T430_REVA_BACKLIGHT_TEST)
+    /* Revision A release firmware keeps the unvalidated backlight hard-off. */
+    value = 0;
+#endif
+
     if (value == 0) {
         err = pwm_set_pulse_dt(&config->pwm, 0);
         if (err) {

@@ -1,0 +1,28 @@
+#include <dt-bindings/pwm/pwm.h>
+
+/ {
+	diagnostic_pwm {
+		compatible = "pwm-leds";
+		diagnostic_pwm_output: diagnostic_pwm_output {
+			pwms = <&pwm1 0 PWM_NSEC(20000) PWM_POLARITY_NORMAL>;
+		};
+	};
+
+	aliases {
+		diagnostic-pwm = &diagnostic_pwm_output;
+	};
+};
+
+&pinctrl {
+	pwm1_diagnostic_default: pwm1_diagnostic_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 1, 4)>;
+		};
+	};
+};
+
+&pwm1 {
+	status = "okay";
+	pinctrl-0 = <&pwm1_diagnostic_default>;
+	pinctrl-names = "default";
+};
