@@ -27,9 +27,9 @@ progress.
 - **SPEC** contains authoritative behavioral and product contracts.
 
 For current behavior, read the [transport and profile
-contract](engineering/spec/transport-profile-contract.md). For planned hardware,
-start with the [shared Revision B
-core](engineering/architecture/hardware/shared/revision-b/core-wiring.md) and
-[T470 adapter](engineering/architecture/hardware/t470/revision-b/connector.md).
+contract](engineering/spec/transport-profile-contract.md). For the remaining
+planned adapter documentation, start with the [universal Revision B
+connector](engineering/architecture/hardware/shared/revision-b/universal-connector.md)
+and [T470 adapter](engineering/architecture/hardware/t470/revision-b/connector.md).
 
 The source code, issue tracker, and complete project history are available in the [GitHub repository](https://github.com/rampadc/zmk-thinkpad).

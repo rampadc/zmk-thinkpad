@@ -3,18 +3,17 @@
 > **Status: design only.** Revision B has not been built or tested.
 
 Revision B uses a 60-contact FFC between the shared core and one passive
-keyboard adapter. The adapter contains only local decoupling, an ID strap, and
-optional zero-ohm test links. TrackPoint translation, LED drivers, and
+keyboard adapter. The adapter contains only local decoupling and optional
+zero-ohm test links. TrackPoint translation, LED drivers, and
 backlight switching stay on the core.
 
-This interface is proprietary to this project. It carries 3.0 V logic, 5 V
+This interface is proprietary to this project. It carries 3.3 V logic, 5 V
 TrackPoint signals and switched 5 V backlight power on the same cable. Do not
 connect it to a laptop keyboard cable or an unrelated 60-contact FFC.
 
 ## Connector and footprint
 
-Use HCTL `XW05202-600R-00`, LCSC part
-[`C2906127`](https://www.lcsc.com/product-detail/C2906127.html), on both boards:
+Use Molex `5051106091`, LCSC/JLCPCB `C493444`, on both boards:
 
 | Property | Requirement |
 | --- | --- |
@@ -24,16 +23,15 @@ Use HCTL `XW05202-600R-00`, LCSC part
 | Contact position | Bottom contact |
 | Lock | Hinged lid |
 | FFC thickness | 0.30 mm |
-| Contact material/finish | Copper alloy, tin plated |
-| Rated voltage | 50 V AC/DC |
-| Operating temperature | -25 degrees C to +85 degrees C |
-| Rated current | Not specified by the manufacturer drawing or LCSC listing |
-| Mating cycles | Not specified by the manufacturer drawing or LCSC listing |
+| Contact material/finish | Gold-plated phosphor bronze |
+| Rated voltage | 50 V |
+| Operating temperature | -40 degrees C to +105 degrees C |
+| Rated current | 0.5 A per contact |
+| Connector height | 1.9 mm |
 
-Create the footprint from the [HCTL manufacturer
-drawing](https://www.lcsc.com/datasheet/C2906127.pdf), including its `PCB
-LAYOUT` view. Do not reuse the old Hirose footprint or derive pad dimensions
-from pitch alone.
+Create the footprint from the Molex `5051106091` manufacturer drawing and land
+pattern. Do not reuse the HCTL `C2906127`, Hirose `C224193`, or another
+nominally similar 60-pin footprint without a dimensional comparison.
 
 An alternate connector is acceptable only if its drawing confirms:
 
@@ -46,24 +44,10 @@ An alternate connector is acceptable only if its drawing confirms:
 
 If any land or mechanical dimension differs, create another footprint.
 
-For the 60-position `XW05202-600R-00`, the drawing gives these controlling
-dimensions. They are review aids, not a replacement for checking the drawing:
-
-| Drawing item | Dimension |
-| --- | ---: |
-| Contact pitch | 0.50 +/- 0.05 mm |
-| `A`, first-to-last contact center span | 29.50 mm |
-| `B`, connector reference width | 30.60 mm |
-| `C`, overall connector width | 34.40 mm |
-| Signal-pad width | 0.35 +/- 0.05 mm |
-| Signal-pad length | 1.20 mm |
-| Nominal connector height | 2.00 +/- 0.15 mm |
-| Nominal connector depth | 6.00 +/- 0.15 mm |
-| Applicable FFC thickness | 0.30 +/- 0.03 mm |
-
-Use the drawing for tab pads and the actuator and cable envelopes. The summary
-dimensions above are review aids, not a footprint definition. No drop-in
-replacement has been approved.
+Four parallel `BL_5V` contacts carry about 155 mA each at the measured 620 mA
+load. This is below the connector's 0.5 A per-contact rating, but first-article
+temperature and voltage-drop measurements are still required with the final
+cable and enclosure.
 
 The PCB footprint must include:
 
@@ -80,15 +64,15 @@ The PCB footprint must include:
 
 The cable arrangement is fixed:
 
-1. Mount `J_UFC_CORE`, an HCTL `XW05202-600R-00`, on the top side of the core
+1. Mount `J_UFC_CORE`, a Molex `5051106091`, on the top side of the core
    PCB.
-2. Mount `J_UFC_ADAPTER`, another HCTL `XW05202-600R-00`, on the top side of
+2. Mount `J_UFC_ADAPTER`, another Molex `5051106091`, on the top side of
    the adapter PCB.
 3. Place the boards coplanar with the two cable openings facing each other.
    Relative to `J_UFC_CORE`, `J_UFC_ADAPTER` is rotated exactly 180 degrees in
    the PCB layout.
-4. Use an untwisted 60-contact, 0.50 mm-pitch, 0.30 mm-thick FFC whose exposed
-   contacts are on the same face at both ends, commonly called a Type A cable.
+4. Use Molex `15018-0561`: 60 circuits, 0.50 mm pitch, 76 mm long, 0.5 A per
+   conductor, with contacts on the same face at both ends (Type A).
 5. Insert both cable ends with the exposed conductors facing down toward their
    PCBs, as required by the bottom-contact connectors.
 
@@ -157,41 +141,41 @@ physical pad on the rotated adapter connector. The two numbers always add to
 | Universal/core pin | Daughter-board pad | Signal | Domain and core-board treatment |
 | ---: | ---: | --- | --- |
 | 1 | 60 | GND | Ground |
-| 2 | 59 | `DRV0` | 3.0 V active-low open-drain matrix drive |
-| 3 | 58 | `DRV1` | 3.0 V active-low open-drain matrix drive |
-| 4 | 57 | `DRV2` | 3.0 V active-low open-drain matrix drive |
-| 5 | 56 | `DRV3` | 3.0 V active-low open-drain matrix drive |
-| 6 | 55 | `DRV4` | 3.0 V active-low open-drain matrix drive |
-| 7 | 54 | `DRV5` | 3.0 V active-low open-drain matrix drive |
-| 8 | 53 | `DRV6` | 3.0 V active-low open-drain matrix drive |
-| 9 | 52 | `DRV7` | 3.0 V active-low open-drain matrix drive |
-| 10 | 51 | `DRV8` | 3.0 V active-low open-drain matrix drive |
-| 11 | 50 | `DRV9` | 3.0 V active-low open-drain matrix drive |
-| 12 | 49 | `DRV10` | 3.0 V active-low open-drain matrix drive |
-| 13 | 48 | `DRV11` | 3.0 V active-low open-drain matrix drive |
-| 14 | 47 | `DRV12` | 3.0 V active-low open-drain matrix drive |
-| 15 | 46 | `DRV13` | 3.0 V active-low open-drain matrix drive |
-| 16 | 45 | `DRV14` | 3.0 V active-low open-drain matrix drive |
-| 17 | 44 | `DRV15` | 3.0 V active-low open-drain matrix drive |
+| 2 | 59 | `DRV0` | 3.3 V active-low open-drain matrix drive |
+| 3 | 58 | `DRV1` | 3.3 V active-low open-drain matrix drive |
+| 4 | 57 | `DRV2` | 3.3 V active-low open-drain matrix drive |
+| 5 | 56 | `DRV3` | 3.3 V active-low open-drain matrix drive |
+| 6 | 55 | `DRV4` | 3.3 V active-low open-drain matrix drive |
+| 7 | 54 | `DRV5` | 3.3 V active-low open-drain matrix drive |
+| 8 | 53 | `DRV6` | 3.3 V active-low open-drain matrix drive |
+| 9 | 52 | `DRV7` | 3.3 V active-low open-drain matrix drive |
+| 10 | 51 | `DRV8` | 3.3 V active-low open-drain matrix drive |
+| 11 | 50 | `DRV9` | 3.3 V active-low open-drain matrix drive |
+| 12 | 49 | `DRV10` | 3.3 V active-low open-drain matrix drive |
+| 13 | 48 | `DRV11` | 3.3 V active-low open-drain matrix drive |
+| 14 | 47 | `DRV12` | 3.3 V active-low open-drain matrix drive |
+| 15 | 46 | `DRV13` | 3.3 V active-low open-drain matrix drive |
+| 16 | 45 | `DRV14` | 3.3 V active-low open-drain matrix drive |
+| 17 | 44 | `DRV15` | 3.3 V active-low open-drain matrix drive |
 | 18 | 43 | GND | Ground |
-| 19 | 42 | `SENSE0` | 3.0 V active-low matrix input; core internal pull-up |
-| 20 | 41 | `SENSE1` | 3.0 V active-low matrix input; core internal pull-up |
-| 21 | 40 | `SENSE2` | 3.0 V active-low matrix input; core internal pull-up |
-| 22 | 39 | `SENSE3` | 3.0 V active-low matrix input; core internal pull-up |
-| 23 | 38 | `SENSE4` | 3.0 V active-low matrix input; core internal pull-up |
-| 24 | 37 | `SENSE5` | 3.0 V active-low matrix input; core internal pull-up |
-| 25 | 36 | `SENSE6` | 3.0 V active-low matrix input; core internal pull-up |
-| 26 | 35 | `SENSE7` | 3.0 V active-low matrix input; core internal pull-up |
+| 19 | 42 | `SENSE0` | 3.3 V active-low matrix input; core internal pull-up |
+| 20 | 41 | `SENSE1` | 3.3 V active-low matrix input; core internal pull-up |
+| 21 | 40 | `SENSE2` | 3.3 V active-low matrix input; core internal pull-up |
+| 22 | 39 | `SENSE3` | 3.3 V active-low matrix input; core internal pull-up |
+| 23 | 38 | `SENSE4` | 3.3 V active-low matrix input; core internal pull-up |
+| 24 | 37 | `SENSE5` | 3.3 V active-low matrix input; core internal pull-up |
+| 25 | 36 | `SENSE6` | 3.3 V active-low matrix input; core internal pull-up |
+| 26 | 35 | `SENSE7` | 3.3 V active-low matrix input; core internal pull-up |
 | 27 | 34 | GND | Ground |
-| 28 | 33 | `-HOTKEY` | 3.0 V active-low Fn input; core internal pull-up |
-| 29 | 32 | `-PWRSWITCH` | 3.0 V active-low T430 power input; NC on adapters without it |
-| 30 | 31 | `TP4LEFT` | 3.0 V active-low direct input; core internal pull-up |
-| 31 | 30 | `TP4RIGHT` | 3.0 V active-low direct input; core internal pull-up |
-| 32 | 29 | `TP4MIDDLE` | 3.0 V active-low direct input; core internal pull-up |
+| 28 | 33 | `-HOTKEY` | 3.3 V active-low Fn input; core internal pull-up |
+| 29 | 32 | `-PWRSWITCH` | 3.3 V active-low T430 power input; NC on adapters without it |
+| 30 | 31 | `TP4LEFT` | 3.3 V active-low direct input; core internal pull-up |
+| 31 | 30 | `TP4RIGHT` | 3.3 V active-low direct input; core internal pull-up |
+| 32 | 29 | `TP4MIDDLE` | 3.3 V active-low direct input; core internal pull-up |
 | 33 | 28 | `KBD_ID` | T470-only raw keyboard ID from J38 pin 36; T430 adapter leaves this universal pin unconnected |
-| 34 | 27 | `ADAPTER_ID` | Digital identification strap to core `P0.09`; T430 leaves open and T470 ties to GND |
+| 34 | 27 | `RESERVED` | Leave unconnected on both adapters; core `P0.09` is reassigned to `TYPEC_HIGH_CURRENT_N` and does not cross the adapter cable |
 | 35 | 26 | `-KBD_BL_DTCT` | Keyboard backlight-detect input to core `P0.10`; T430 J7 pin 21 or T470 J37 pin 12 |
-| 36 | 25 | GND | Ground and ID-strap return |
+| 36 | 25 | GND | Ground return |
 | 37 | 24 | `TP4_DATA` | 5 V open-collector side of core DATA translator |
 | 38 | 23 | GND | TrackPoint signal return/guard |
 | 39 | 22 | `TP4_CLOCK` | 5 V open-collector side of core CLOCK translator |
@@ -205,16 +189,16 @@ physical pad on the rotated adapter connector. The two numbers always add to
 | 47 | 14 | `-LED_MUTE` | After core sink resistor; speaker-mute LED |
 | 48 | 13 | `-LEDMICMUTE` | After core sink resistor; microphone-mute LED |
 | 49 | 12 | `-LED_CAPSLOCK` | After core sink resistor; T470 Caps Lock LED; NC on T430 |
-| 50 | 11 | `KBD_BL_PWM` | Direct 0-3.0 V push-pull PWM; never pull up to 5 V |
+| 50 | 11 | `KBD_BL_PWM` | Direct 0-3.3 V push-pull PWM; never pull up to 5 V |
 | 51 | 10 | `BL_5V` | Switched backlight 5 V; parallel with pins 52-54 |
 | 52 | 9 | `BL_5V` | Switched backlight 5 V; parallel with pins 51, 53 and 54 |
 | 53 | 8 | `BL_5V` | Switched backlight 5 V; parallel with pins 51, 52 and 54 |
 | 54 | 7 | `BL_5V` | Switched backlight 5 V; parallel with pins 51-53 |
 | 55 | 6 | GND | Backlight return; parallel return paths also use pins 58 and 60 |
-| 56 | 5 | `VCC` | Regulated 3.0 V keyboard rail; parallel with pins 57 and 59 |
-| 57 | 4 | `VCC` | Regulated 3.0 V keyboard rail; parallel with pins 56 and 59 |
+| 56 | 5 | `VCC` | Regulated 3.3 V keyboard rail; parallel with pins 57 and 59 |
+| 57 | 4 | `VCC` | Regulated 3.3 V keyboard rail; parallel with pins 56 and 59 |
 | 58 | 3 | GND | Keyboard-logic and backlight return |
-| 59 | 2 | `VCC` | Regulated 3.0 V keyboard rail; parallel with pins 56 and 57 |
+| 59 | 2 | `VCC` | Regulated 3.3 V keyboard rail; parallel with pins 56 and 57 |
 | 60 | 1 | GND | Ground and edge guard |
 
 Pins assigned to the same power rail must join with copper on both boards; do
@@ -223,8 +207,10 @@ backlight bus immediately after the connector pads. The four contacts provide
 connector margin but do not prove that the complete boost converter, FFC or
 keyboard cable can carry the load. A T470 keyboard drew 595 mA at 80% duty and
 620 mA at 85% duty with 50 kHz PWM. At 90%, the Analog Discovery supply shut
-down before a current reading was recorded. Validate connector temperature and
-voltage drop at the final maximum duty using a suitable current-limited supply.
+down before a current reading was recorded. Revision B firmware is limited to
+70% until the complete power path is validated. Validate connector temperature
+and voltage drop at that limit and any later approved limit using a suitable
+current-limited supply.
 
 ### TrackPoint IV reset polarity and driver
 
@@ -237,10 +223,10 @@ The reset input's normal released state is low. Revision B uses the same
 non-inverting BSS138 topology for RESET as for DATA and CLOCK. For each of the
 three channels:
 
-- BSS138 source connects to the nRF/3.0 V side;
+- BSS138 source connects to the nRF/3.3 V side;
 - BSS138 drain connects to the keyboard/5 V side;
-- BSS138 gate connects directly to regulated 3.0 V `VCC`;
-- a fitted 10 kOhm resistor pulls the nRF-side signal up to 3.0 V; and
+- BSS138 gate connects directly to regulated 3.3 V `VCC`;
+- a fitted 10 kOhm resistor pulls the nRF-side signal up to 3.3 V; and
 - a fitted 10 kOhm resistor pulls the keyboard-side signal up to 5 V.
 
 The nRF52840 internal pull-ups do not replace the fitted Revision B 10 kOhm
@@ -265,21 +251,13 @@ universal daughter board remains passive.
 
 ## Adapter identification
 
-The core enables the internal pull-up on `ADAPTER_ID`. One bit is sufficient
-because Revision B supports exactly two mutually exclusive adapter types:
-
-| Adapter | `ADAPTER_ID` |
-| --- | --- |
-| No adapter or T430 | Open |
-| T470 | GND |
-
-Identification is diagnostic only. It must not automatically select a firmware
-matrix transform or USB/BLE transport profile. Continue to build distinct T430
-and T470 firmware images. Firmware must also tolerate an unpowered or absent
-adapter without continuously leaking current through the ID pin. Because
-`P0.09` and `P0.10` default to NFC operation, firmware must set
-`CONFIG_NFCT_PINS_AS_GPIOS=y` before using `ADAPTER_ID` or
-`-KBD_BL_DTCT`.
+Revision B does not spend a GPIO on passive adapter identification. Continue
+to build distinct T430 and T470 firmware images and identify the installed
+adapter during programming and service. Universal pin 34 is reserved and must
+remain unconnected on both adapters. Core `P0.09` instead reads the materially
+safety-relevant `TYPEC_HIGH_CURRENT_N` signal. Because `P0.09` and `P0.10`
+default to NFC operation, firmware must set `CONFIG_NFCT_PINS_AS_GPIOS=y`
+before using `TYPEC_HIGH_CURRENT_N` or `-KBD_BL_DTCT`.
 
 ## Passive adapter requirements
 
@@ -289,8 +267,14 @@ adapter without continuously leaking current through the ID pin. Because
 - Put at least 22 uF bulk plus 100 nF ceramic decoupling from `+5V` to GND
   beside the physical TrackPoint connector.
 - Put 100 nF from `VCC` to GND beside each keyboard connector supply entry.
-- Use optional zero-ohm links in `+5V` and `BL_5V` for first-article
-  isolation and current measurement.
+- Use named zero-ohm links `LK_TRACKPOINT_5V` on the core and
+  `LK_BL_ADAPTER` on each adapter for first-article isolation. Keep the
+  50 mOhm Kelvin current shunt on the core; do not estimate current from a
+  generic zero-ohm resistor's unspecified resistance.
+- Provide `MP_ADAPTER_5V`, `MP_ADAPTER_BL_5V`, `MP_ADAPTER_BL_PWM`, and an
+  adjacent ground point on the adapter. These are measurement points only;
+  sustained external 5 V injection uses the core `INJ_5V` pads after removing
+  `LK_5V_SOURCE`.
 - Keep `TP4_DATA` and `TP4_CLOCK` short, do not route either beside `BL_5V`,
   and maintain a continuous ground plane below them.
 - Do not hot-plug an adapter. Disconnect USB and the battery before opening
@@ -310,7 +294,7 @@ adapter without continuously leaking current through the ID pin. Because
    points above.
 5. Confirm no continuity from any 5 V pin (37, 39, 41-43 or 51-54) to `DRV`,
    `SENSE`, direct-input, ID or `VCC` pins.
-6. Power the core from current-limited supplies and verify 3.0 V and both 5 V
+6. Power the core from current-limited supplies and verify 3.3 V and both 5 V
    branches at the adapter before connecting a keyboard.
 7. Validate every T430 and T470 matrix transition, TrackPoint movement and
    buttons, each keyboard indicator, and backlight startup/PWM behavior.

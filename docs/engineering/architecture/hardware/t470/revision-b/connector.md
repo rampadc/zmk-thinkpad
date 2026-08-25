@@ -91,13 +91,13 @@ LED signals to the universal interface as follows:
 | 30 | `-LEDMICMUTE` | 48 | 13 |
 | 33 | `-LED_CAPSLOCK` | 49 | 12 |
 
-The matrix nets cross the universal FFC and terminate at the HolyIOT pins
-defined in [`core-wiring.md`](../../shared/revision-b/core-wiring.md). Install only
+The matrix nets cross the universal FFC and terminate at the HolyIOT matrix
+GPIOs defined by the hardware specification and firmware shield. Install only
 one keyboard adapter at a time.
 
-Tie universal `ADAPTER_ID` (core pin 34 / daughter pad 27) to GND on the T470
-adapter. Leave it open on the T430 adapter. This strap is board-local and does
-not connect to either keyboard cable.
+Leave reserved universal core pin 34 / daughter pad 27 unconnected. Revision B
+uses core `P0.09` for Type-C source-current qualification instead of a passive
+adapter-identification strap.
 
 `TP4LEFT`, `TP4RIGHT`, and `TP4MIDDLE` are read directly by the nRF52840 in
 Revision B. Do not bridge them to another TrackPoint-button input path. No
@@ -108,7 +108,7 @@ pull-ups.
 
 - Confirm the footprint is bottom-contact and that physical pin 1 matches the
   schematic and PCB silkscreen orientation.
-- Confirm FPC1 pin 27 reaches only the regulated 3.0 V rail and is not grounded.
+- Confirm FPC1 pin 27 reaches only the regulated 3.3 V rail and is not grounded.
 - Confirm FPC1 pins 32 and 34, plus shield tabs 41 and 42, reach ground.
 - Confirm pins 1-2 and 39-40 have no copper connection, and that pin 38
   (`KBD_ID`) is intentionally unconnected.

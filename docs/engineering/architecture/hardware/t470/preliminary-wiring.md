@@ -9,7 +9,7 @@ description: Historical DK-era T470 wiring that predates Revision B.
 This early plan mapped a T470 keyboard and TrackPoint to a HolyIOT 18010 module.
 It was not manufactured as Revision A. The T470 work now starts with the
 [Revision B connector](revision-b/connector.md) and the
-[shared Revision B core](../shared/revision-b/core-wiring.md).
+[universal adapter connector](../shared/revision-b/universal-connector.md).
 
 ## Confirmed work
 
@@ -55,6 +55,4 @@ mechanical fit still require first-article checks on Revision B.
 ## Current sources
 
 - [T470 Revision B connector](revision-b/connector.md)
-- [Shared Revision B module wiring](../shared/revision-b/core-wiring.md)
 - [Universal adapter connector](../shared/revision-b/universal-connector.md)
-- [Revision B power path](../shared/revision-b/power-path.md)

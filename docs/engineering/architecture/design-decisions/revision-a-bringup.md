@@ -61,8 +61,8 @@ Synchronized 1 Hz flashing on several LEDs came from the HolyIOT module's
 factory firmware before ZMK was installed. It did not indicate a reset or power
 fault.
 
-Revision B uses the [BQ24073 power path](../hardware/shared/revision-b/power-path.md).
-It also needs test points for each rail, separable TrackPoint and backlight
+Revision B uses a BQ24073-based power path. It also needs measurement points
+for each rail, separable TrackPoint and backlight
 branches, defined startup states, and tests for every USB, battery, and latch
 combination.
 

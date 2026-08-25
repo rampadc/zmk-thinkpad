@@ -2,9 +2,7 @@
 
 > **Status: design only.** Revision B has not been built or tested.
 
-This page defines the T430 adapter. The module GPIO allocation is in
-[`core-wiring.md`](../../shared/revision-b/core-wiring.md), and the core-to-adapter
-FFC is defined in
+This page defines the T430 adapter. The core-to-adapter FFC is defined in
 [`universal-connector.md`](../../shared/revision-b/universal-connector.md).
 Compared with [Revision A](../revision-a/wiring.md), only the HolyIOT GPIO for
 `DRV8` changes. Connector signal names and matrix indices stay the same.
@@ -27,15 +25,17 @@ After moving `DRV8`, Holyiot pad 7 / `P0.02/AIN0` is no longer a matrix pin.
 Reserve it exclusively for battery measurement:
 
 ```text
-BAT_PROTECTED -- 1.0 MOhm --+-- Holyiot pad 7, P0.02/AIN0
+BAT_PROTECTED -- 900 kOhm --+-- Holyiot pad 7, P0.02/AIN0
                             |
                             +-- 330 kOhm -- GND
                             |
                             +-- 100 nF -- GND
 ```
 
-Use 1% resistors. Do not connect the ADC node to J7 pin 6 or any other matrix
-net.
+Use 1% resistors. The divider ratio is `330 / (900 + 330) = 0.268293`, so a
+4.2 V pack produces approximately 1.127 V at the ADC before tolerance. Update
+firmware scaling and validate acquisition time with the high source
+impedance. Do not connect the ADC node to J7 pin 6 or any other matrix net.
 
 ## Complete Revision B matrix assignment
 
