@@ -40,6 +40,7 @@ const config: Config = {
       logo: {alt: 'ZMK-ThinkPad TrackPoint mark', src: 'img/trackpoint.svg'},
       items: [
         {type: 'docSidebar', sidebarId: 'docsSidebar', position: 'left', label: 'Docs'},
+        {href: 'https://congx.dev/tags/zmk-thinkpad/', label: 'Blog', position: 'right'},
         {href: 'https://github.com/rampadc/zmk-thinkpad', label: 'GitHub', position: 'right'},
       ],
     },
