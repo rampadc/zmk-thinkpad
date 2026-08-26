@@ -1,5 +1,12 @@
 # ThinkPad firmware requirements
 
+## Hardware-document units
+
+- Every PCB track-width requirement must include a value in mil. A metric
+  equivalent may be included as well, but never specify a track width in
+  metric alone.
+- Specify drilled holes, fiducials, and overall board dimensions in metric.
+
 Before changing USB/BLE profile selection, pairing, or profile LED behavior,
 read and follow [`docs/engineering/spec/transport-profile-contract.md`](docs/engineering/spec/transport-profile-contract.md).
 
