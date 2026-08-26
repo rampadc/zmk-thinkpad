@@ -24,7 +24,13 @@ Revision A remains as built. Revision B carries these changes:
   otherwise require a valid battery to supplement the cable input.
 - Add a battery-voltage divider and ADC input if battery reporting remains a
   product requirement.
+- Fit the hookable loops, adjacent grounds, removable branch links, injection
+  pads and Kelvin sense points defined by the shared Revision B
+  [power test-access specification](power-test-access.md).
 
-The [bring-up record](../../../design-decisions/revision-a-bringup.md) gives the
-evidence behind these changes. The [Revision A schematic](schematic.pdf) and
-[purchased BOM](purchased-bom.xls) remain the record of the manufactured board.
+The [bring-up record](../../docs/engineering/design-decisions/revision-a-bringup.md)
+gives the evidence behind these changes. The
+[Revision A schematic](../../docs/engineering/architecture/hardware/t430/revision-a/schematic.pdf)
+and
+[purchased BOM](../../docs/engineering/architecture/hardware/t430/revision-a/purchased-bom.xls)
+remain the record of the manufactured board.

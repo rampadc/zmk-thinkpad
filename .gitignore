@@ -2,3 +2,6 @@
 tmp/
 outputs/
 output/*
+
+# Work-in-progress mechanical CAD; not ready for version control.
+mcad/t60/

@@ -13,7 +13,8 @@ connect it to a laptop keyboard cable or an unrelated 60-contact FFC.
 
 ## Connector and footprint
 
-Use Molex `5051106091`, LCSC/JLCPCB `C493444`, on both boards:
+Use JUSHUO `AFC01-S60FCA-HF`, [LCSC
+`C49260536`](https://www.lcsc.com/product-detail/C49260536.html), on both boards:
 
 | Property | Requirement |
 | --- | --- |
@@ -23,15 +24,14 @@ Use Molex `5051106091`, LCSC/JLCPCB `C493444`, on both boards:
 | Contact position | Bottom contact |
 | Lock | Hinged lid |
 | FFC thickness | 0.30 mm |
-| Contact material/finish | Gold-plated phosphor bronze |
-| Rated voltage | 50 V |
-| Operating temperature | -40 degrees C to +105 degrees C |
-| Rated current | 0.5 A per contact |
-| Connector height | 1.9 mm |
+| Contact material/finish | Tin-plated copper alloy |
+| Operating temperature | -45 degrees C to +85 degrees C |
+| Connector height | 2.0 mm |
 
-Create the footprint from the Molex `5051106091` manufacturer drawing and land
-pattern. Do not reuse the HCTL `C2906127`, Hirose `C224193`, or another
-nominally similar 60-pin footprint without a dimensional comparison.
+Create the footprint from the JUSHUO `AFC01-S60FCA-HF` drawing and land
+pattern supplied by LCSC. Do not reuse the previous Molex `5051106091`, HCTL
+`C2906127`, Hirose `C224193`, or another nominally similar 60-pin footprint
+without a dimensional comparison.
 
 An alternate connector is acceptable only if its drawing confirms:
 
@@ -39,15 +39,16 @@ An alternate connector is acceptable only if its drawing confirms:
 - compatible hold-down-tab locations and solder-pad dimensions;
 - the same 0.30 mm cable thickness and bottom-contact orientation;
 - compatible insertion depth, actuator sweep and cable centerline;
-- an explicit per-contact current rating adequate for the assigned power pins;
-- temperature and mating-durability ratings adequate for the product.
+- an ordinary FFC connector construction suitable for the product environment.
 
 If any land or mechanical dimension differs, create another footprint.
 
 Four parallel `BL_5V` contacts carry about 155 mA each at the measured 620 mA
-load. This is below the connector's 0.5 A per-contact rating, but first-article
-temperature and voltage-drop measurements are still required with the final
-cable and enclosure.
+load. A no-name off-the-shelf 60-pin FFC connector has already operated the
+T470 backlight successfully, so Revision B does not require a premium or
+explicitly current-rated connector. First-article temperature and voltage-drop
+measurements are still required with the selected connector, cable and
+enclosure.
 
 The PCB footprint must include:
 
@@ -64,15 +65,18 @@ The PCB footprint must include:
 
 The cable arrangement is fixed:
 
-1. Mount `J_UFC_CORE`, a Molex `5051106091`, on the top side of the core
+1. Mount `J_UFC_CORE`, a JUSHUO `AFC01-S60FCA-HF`, on the top side of the core
    PCB.
-2. Mount `J_UFC_ADAPTER`, another Molex `5051106091`, on the top side of
+2. Mount `J_UFC_ADAPTER`, another JUSHUO `AFC01-S60FCA-HF`, on the top side of
    the adapter PCB.
 3. Place the boards coplanar with the two cable openings facing each other.
    Relative to `J_UFC_CORE`, `J_UFC_ADAPTER` is rotated exactly 180 degrees in
    the PCB layout.
-4. Use Molex `15018-0561`: 60 circuits, 0.50 mm pitch, 76 mm long, 0.5 A per
-   conductor, with contacts on the same face at both ends (Type A).
+4. Use DEALON `FC-0.5B-60P-100mm`, [LCSC
+   `C5242678`](https://www.lcsc.com/product-detail/C5242678.html): 60 circuits,
+   0.50 mm pitch, 100 mm long, 0.30 mm insertion thickness, with contacts on
+   the same face at both ends (Type A). Confirm the 100 mm length in the
+   enclosure before release.
 5. Insert both cable ends with the exposed conductors facing down toward their
    PCBs, as required by the bottom-contact connectors.
 
@@ -275,6 +279,9 @@ before using `TYPEC_HIGH_CURRENT_N` or `-KBD_BL_DTCT`.
   adjacent ground point on the adapter. These are measurement points only;
   sustained external 5 V injection uses the core `INJ_5V` pads after removing
   `LK_5V_SOURCE`.
+- Follow the shared Revision B power test-access specification.
+  for core-board hook loops, adjacent grounds, removable links, injection
+  pads, Kelvin sense pads and switching-node probe pads.
 - Keep `TP4_DATA` and `TP4_CLOCK` short, do not route either beside `BL_5V`,
   and maintain a continuous ground plane below them.
 - Do not hot-plug an adapter. Disconnect USB and the battery before opening

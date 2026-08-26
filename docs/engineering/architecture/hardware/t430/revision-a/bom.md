@@ -40,4 +40,4 @@ Exact manufacturer documents are in the
   specifications.
 
 Revision B replaces the Revision A charger and power-path design. See the
-[deferred changes](deferred-revision-b.md).
+deferred Revision B changes.

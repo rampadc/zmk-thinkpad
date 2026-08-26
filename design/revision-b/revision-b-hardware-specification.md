@@ -1,11 +1,62 @@
 # Revision B consolidated hardware specification
 
-> **Status: authoritative design draft; not yet built or validated.** This file
-> consolidates the current Revision B power, wiring, connector, passive,
-> configuration-link, measurement-access, and bring-up decisions. Where it
-> conflicts with the older Revision B notes, use this file for the next
-> schematic revision. Do not release a PCB until every item marked **release
-> blocker** has been resolved against the completed schematic and layout.
+> **Working design specification — authoritative, but not yet built.** Use this
+> page while drawing the Revision B schematic and PCB. If an older Revision B
+> note disagrees with this page, this page wins. Do not release the board until
+> every item in [Release blockers](#13-release-blockers) is checked off.
+
+## How to use this page
+
+| While working on… | Go to… |
+| --- | --- |
+| Overall architecture or net names | [Scope and fixed decisions](#1-scope-and-fixed-decisions), [power architecture](#3-system-power-architecture) |
+| Choosing or ordering parts | [Core part list](#5-core-part-list) |
+| Drawing the schematic | [Schematic wiring guide](#6-schematic-wiring-guide), then the [sheet checklist](#614-schematic-sheet-connection-checklist) |
+| Connecting the HolyIOT module | [HolyIOT wiring](#7-holyiot-wiring) |
+| Drawing the core/adapter interface | [Universal adapter interface](#8-universal-60-contact-adapter-interface) |
+| Drawing a keyboard adapter | [Adapter requirements](#9-adapter-requirements) |
+| Adding debug access | [Measurement, isolation and injection](#10-measurement-isolation-and-injection-access) |
+| Placing and routing the PCB | [Layout requirements](#11-layout-requirements) |
+| Bringing up the first boards | [First-article sequence](#12-first-article-and-release-sequence) |
+| Deciding whether the design is ready | [Release blockers](#13-release-blockers) |
+
+### Revision B at a glance
+
+| Area | Selected implementation |
+| --- | --- |
+| Controller | HolyIOT 18010 / nRF52840 on one shared core board |
+| Keyboard connection | Passive T430 or T470 adapter over one 60-contact FFC |
+| USB-C detection | Hynetek `HUSB320-BA000-QN12R`, LCSC `C7471906` |
+| Charger and power path | TI `BQ24073RGTR`, LCSC `C15220` |
+| 3.3 V rail | TI `TPS63031DSKR`, LCSC `C15516` |
+| 5 V rail | Silergy `SY7069ADC`, LCSC `C207630` |
+| Backlight switch | SGMicro `SGM2562XN6G/TR` |
+| Universal FFC sockets | 2 × JUSHUO `AFC01-S60FCA-HF`, LCSC [`C49260536`](https://www.lcsc.com/product-detail/C49260536.html) |
+| Universal FFC cable | DEALON `FC-0.5B-60P-100mm`, LCSC [`C5242678`](https://www.lcsc.com/product-detail/C5242678.html) |
+
+### Rules that prevent expensive mistakes
+
+- Keep `USB_VBUS_RAW`, `VSYS`, `VCC_REG`, `VCC`, `BOOST_5V`, `+5V`, and
+  `BL_5V` as separate nets.
+- Use the exact manufacturer footprint for every FFC connector. Matching pin
+  count and pitch do not imply matching hold-down pads or cable position.
+- The universal cable is 60-pin, 0.5 mm pitch, 0.30 mm thick, and Type A
+  (contacts on the same side). The adapter connector is rotated 180 degrees.
+- Do not omit the isolation links, injection pads, measurement pads, or Kelvin
+  shunt connections. They are part of the design, not optional debug clutter.
+- Do not fit the obsolete parts listed in the next section.
+- Treat every unchecked item in [Release blockers](#13-release-blockers) as a
+  reason not to order production boards.
+
+### Document conventions
+
+- **Must** and **do not** are requirements.
+- **Candidate** means the part still needs qualification.
+- **DNP option** means an assembly variant, not a user-accessible jumper.
+- Names beginning with `TP` refer to TrackPoint signals. Measurement points use
+  `MP_`.
+- Pin numbers are physical package pins viewed according to the cited
+  manufacturer drawing.
 
 ## 1. Scope and fixed decisions
 
@@ -42,11 +93,11 @@ must change as specified below.
 
 | Prefix | Meaning | Physical implementation |
 | --- | --- | --- |
-| `MP_` | Measurement point | Flat exposed copper pad for probe or pogo pin |
-| `KL_` | Kelvin measurement point | Matched pair of pads routed independently to a shunt terminal |
+| `MP_` | Measurement point | 1.0-1.5 mm round or rounded-rectangle exposed ENIG pad; use at least 2.0 mm for `MP_GND_*` probe-return pads |
+| `KL_` | Kelvin measurement point | Matched pair of 1.0-1.5 mm exposed ENIG pads, with each sense trace routed independently to its shunt terminal |
 | `LK_` | Normally fitted isolation link | Zero-ohm resistor footprint; removable for fault isolation or injection |
 | `SJ_` | Assembly configuration selector | Two-pad open/closed or three-pad solder selector; no header |
-| `INJ_` | External power injection | Large flat pads and optional unpopulated plated holes; no fitted connector in production |
+| `INJ_` | External power injection | For 5 V/GND: at least two parallel 2.5 mm x 4.0 mm pads per polarity plus optional 1.0 mm plated holes; for VCC: one 2.0 mm pad plus an adjacent 2.0 mm ground pad; no production connector |
 | `DBG_` | Programming/debug access | Tag-Connect or compact pogo-pad footprint |
 
 Silkscreen may abbreviate long names, but the schematic net and reference name
@@ -134,7 +185,7 @@ Use `BQ24073RGTR`, LCSC `C15220`, in the TI RGT exposed-pad footprint.
 | `TS` | Approved 10 kOhm pack NTC, or conditional fixed 10 kOhm fallback |
 | `TD` | GND |
 | `TMR` | No-connect for internal timers |
-| `PGOOD`, `CHG` | Optional; open-drain, never pulled above receiver rail |
+| `PGOOD`, `CHG` | Drive the common-anode RGB power-status LED described below; both are open-drain and must never be pulled above `TYPEC_VDD` |
 
 The 1.2 kOhm ILIM target gives approximately 1.342 A typical and 1.433 A at
 the data-sheet maximum factor. Do not fit the preliminary 3.6 kOhm value and
@@ -147,6 +198,53 @@ transient discharge, subject to higher first-article measurements. Prefer a
 three-wire pack with a documented 10 kOhm-at-25-degrees-C NTC. Fixed-TS and
 external-NTC builds are mutually exclusive assembly variants, selected with
 fitted/DNP zero-ohm links or resistors, not an end-user jumper.
+
+#### 3.2.1 Power and charge status LED
+
+Fit one TUOZHAN `TZ-P4-1615RGBTCA1-0.55T`, [LCSC
+`C779813`](https://www.lcsc.com/product-detail/C779813.html), common-anode RGB
+LED. It is 1.6 mm x 1.5 mm x 0.55 mm (0606), stocked for JLCPCB assembly, and
+is specified for -40 to +80 degrees C. The [manufacturer data
+sheet](https://datasheet.lcsc.com/datasheet/pdf/57e8729266fe22164444840dbe828a74.pdf?productCode=C779813)
+assigns pin 1 common anode, pin 2 red cathode, pin 3 green cathode and pin 4
+blue cathode. Use a manufacturer-specific symbol and land pattern; do not
+substitute the pinout of another four-pad RGB LED.
+
+Wire it as follows:
+
+```text
+TYPEC_VDD ------------------------------ LED pin 1 common anode
+
+LED pin 2 red cathode -- 2.7 kOhm -- BSS138 drain
+                                      BSS138 source -- GND
+PGOOD ------------------------------- BSS138 gate
+  +-- 100 kOhm -- TYPEC_VDD
+
+LED pin 3 green cathode -- 4.7 kOhm -- PGOOD
+LED pin 4 blue cathode  -- 1.5 kOhm -- CHG
+```
+
+Use the previously spare channel in the fifth `BSS138PS` package for the red
+inverter. The 100 kOhm pull-up turns red on when `PGOOD` is high impedance;
+a valid input makes `PGOOD` sink low, illuminating green and turning the red
+MOSFET off. `CHG` sinking low adds blue during charging. Green plus blue is
+perceived as one cyan charge indication, without requiring another logic gate.
+
+| External-input / charge state | Visible indication |
+| --- | --- |
+| No attached USB-C source | Off, including battery-only operation |
+| Attached input not qualified by BQ24073 | Red, provided `TYPEC_VDD` is high enough to illuminate it |
+| Valid input, charging | Cyan (green plus blue) |
+| Valid input, charge complete or charge disabled | Green |
+| Valid input, safety-timer fault | Green with blue/cyan flashing at approximately 2 Hz |
+
+This LED reports the BQ24073's **external-input qualification and charger
+state**, not battery state of charge and not whether `VSYS` is alive. Powering
+the common anode from `TYPEC_VDD`, rather than `VSYS`, deliberately prevents a
+continuous red drain during normal battery-only use. The proposed resistors
+keep each BQ24073 status sink well below its 5 mA test current, including at
+the maximum permitted `TYPEC_VDD`; verify perceived colour balance on the
+first article and adjust only these three resistors if necessary.
 
 ### 3.3 Regulated 3.3 V rail
 
@@ -161,10 +259,11 @@ Delete `ME6211C30M5G-N`, its bias resistor and its old local passives. Use
 - `PS/SYNC` to GND for power-save mode; and
 - `EN` to `SYS_EN`.
 
-Use `LK_VCC`, normally fitted, between `VCC_REG` and `VCC`. It is a flat
-0603/0805 zero-ohm service link, not a pin-header jumper. Removing it isolates
-the regulator output while leaving the regulator output capacitor and FB
-connection intact. External 3.3 V injection goes to `INJ_VCC`, on the `VCC`
+Use `LK_VCC`, normally fitted, between `VCC_REG` and `VCC`. Fit Walsin
+`WR08X0000FTL`, LCSC `C163947`, an 0805 zero-ohm link rated for 1.5 A
+continuous; it is a flat service link, not a pin-header jumper. Removing it
+isolates the regulator output while leaving the regulator output capacitor and
+FB connection intact. External 3.3 V injection goes to `INJ_VCC`, on the `VCC`
 side, only while system power is off and `LK_VCC` is removed.
 
 Do **not** use preliminary `MSK12C02` as the VCC isolation device: its listed
@@ -182,16 +281,18 @@ Retain `SY7069ADC` with:
 - two parallel 22 uF capacitors at `BOOST_5V`; and
 - the validated 470 kOhm / 150 kOhm feedback network for 5.0 V.
 
-`LK_5V_SOURCE`, a normally fitted 1206 zero-ohm link rated for the complete
-branch current, connects `BOOST_5V` to `+5V`. Remove it before applying an
-external 5 V supply to `INJ_5V`. This is a low-profile resistor, not a header.
+`LK_5V_SOURCE`, a normally fitted Walsin `WR12X0000FTL`, LCSC `C164015`,
+1206 zero-ohm link rated for 2 A continuous, connects `BOOST_5V` to `+5V`.
+Remove it before applying an external 5 V supply to `INJ_5V`. This is a
+low-profile resistor, not a header.
 
 `LK_TRACKPOINT_5V`, normally fitted, isolates the TrackPoint supply from the
-shared `+5V` bus. Use an 0805 or 1206 zero-ohm part with a documented current
-rating. Each adapter also has `LK_BL_ADAPTER`, normally fitted, between its
-incoming `BL_5V` bus and keyboard connector. These links are intended for
-first-article fault isolation and current-path diagnosis; they are not
-precision shunts.
+shared `+5V` bus. Use Walsin `WR08X0000FTL`, LCSC `C163947`, an 0805 zero-ohm
+link rated for 1.5 A continuous. Each adapter also has `LK_BL_ADAPTER`, normally
+fitted, between its incoming `BL_5V` bus and keyboard connector; use the same
+2 A Walsin `WR12X0000FTL`, LCSC `C164015`, selected for `LK_5V_SOURCE`. These
+links are intended for first-article fault isolation and current-path
+diagnosis; they are not precision shunts.
 
 ### 3.5 Backlight branch
 
@@ -272,7 +373,7 @@ Retain the following as individual, locally placed parts:
 - the `SYS_EN` pulldown and any series resistors required after enable-pin
   threshold and absolute-maximum review;
 - keyboard backlight-detect series resistor;
-- BQ24073 ISET, ILIM, TS and optional status resistors;
+- BQ24073 ISET, ILIM, TS and the four local status-LED resistors;
 - 900 kOhm HUSB320 PORT/DEBUG_N sink-role strap;
 - 900 kOhm / 330 kOhm battery ADC divider and 100 nF filter;
 - SY7069 feedback divider;
@@ -308,7 +409,7 @@ requirements. Similar names and LCSC category matches are not qualification.
 ## 5. Core part list
 
 This is the revised design list, not a purchase-ready BOM. Quantities marked
-`DNP option` depend on the selected battery/status configuration.
+`DNP option` depend on the selected battery/temperature-sense configuration.
 
 ### 5.1 ICs, semiconductors and magnetics
 
@@ -321,7 +422,8 @@ This is the revised design list, not a purchase-ready BOM. Quantities marked
 | 1 | 3.3 V buck-boost | `TPS63031DSKR`, LCSC `C15516` |
 | 1 | 5 V boost | `SY7069ADC`, LCSC `C207630` |
 | 1 | Backlight load switch | SGMicro `SGM2562XN6G/TR`; pin-compatible, data-sheet-qualified replacement for `TPS22918DBVR`; confirm JLCPCB sourcing before release |
-| 5 | TrackPoint, LED and Type-C level-shift channels | UMW `BSS138PS`, LCSC `C5271194`, dual N-channel MOSFET in SOT-23-6; nine channels are used and one remains unconnected. Preliminary U6-U9 placeholder `44` is invalid |
+| 5 | TrackPoint, LED, Type-C level-shift and status-inverter channels | UMW `BSS138PS`, LCSC `C5271194`, dual N-channel MOSFET in SOT-23-6; all ten channels are used. Preliminary U6-U9 placeholder `44` is invalid |
+| 1 | Power/charge indicator | TUOZHAN `TZ-P4-1615RGBTCA1-0.55T`, LCSC `C779813`, common-anode RGB, SMD-4P 1.6 mm x 1.5 mm x 0.55 mm |
 | 2 | 1.5 uH inductors | `FTC252012S1R5MBCA`, LCSC `C5832371` |
 | 1 | USB ESD | HXY `USBLC6-2SC6`, LCSC `C5261088` |
 | 1 | VBUS TVS | `PTVS5V0S1UR,115` or qualified equivalent |
@@ -340,13 +442,28 @@ This is the revised design list, not a purchase-ready BOM. Quantities marked
 | 1 DNP option | 10 kOhm, 1% | Fixed TS fallback for approved two-wire battery |
 | 1 | 4.7 kOhm x4 isolated array | Three profile LEDs; fourth element unused |
 | 1 | 4.7 kOhm, 1% | BQ24073 ISET |
-| 1 DNP option | 4.7 kOhm | Charge-status LED |
+| 1 each | 2.7 kOhm, 4.7 kOhm, 1.5 kOhm | Status LED red, green and blue cathode series paths respectively |
+| 1 | 100 kOhm | `PGOOD` red-inverter gate pull-up to `TYPEC_VDD` |
 | 1 | 1.2 kOhm, 1% | BQ24073 ILIM |
 | 2 | 900 kOhm, 1% | HUSB320 PORT/DEBUG_N sink-role strap and battery-divider upper leg |
 | 1 | 330 kOhm, 1% | Battery-divider lower leg |
 | 1 each | 470 kOhm, 150 kOhm, 1% | SY7069 feedback; confirm final output calculation |
 | 1 | 50 mOhm, 1%, 1206 Kelvin-capable | Backlight current shunt |
 | As listed below | Zero-ohm links | Flat service isolation; select current-rated parts |
+
+Use only the following qualified zero-ohm jumper family in the production
+BOM. The current ratings below are the manufacturer's jumper ratings, not
+values inferred from ordinary resistor wattage:
+
+| Part | LCSC | Size | Jumper rating | Assigned links |
+| --- | --- | ---: | ---: | --- |
+| Walsin `WR12X0000FTL` | `C164015` | 1206 | 2 A | `LK_5V_SOURCE`, each adapter's `LK_BL_ADAPTER` |
+| Walsin `WR08X0000FTL` | `C163947` | 0805 | 1.5 A | `LK_VCC`, `LK_TRACKPOINT_5V` |
+| Walsin `WR06X0000FTL` | `C163836` | 0603 | 1 A | `LK_BAT_ADC`, `SJ_TS_FIXED`, `SJ_TS_NTC` |
+
+The 2 A rating gives margin over the approximately 1.43 A maximum programmed
+USB input and the measured approximately 620 mA backlight current, but verify
+link voltage drop and temperature at maximum ambient on the first article.
 
 ### 5.3 Main capacitors
 
@@ -370,12 +487,24 @@ Complete the schematic, then recount every local bypass and bulk location.
 | Qty | Function | Part / requirement |
 | ---: | --- | --- |
 | 1 | USB-C receptacle | `TYPE-C-31-M-12`, LCSC `C165948`, if footprint and current rating pass review |
-| 2 | Core and adapter universal FFC connectors | Molex `5051106091`, LCSC/JLCPCB `C493444`; 60 positions, 0.5 mm pitch, bottom contact, right-angle SMT, ZIF/hinged lid, 1.9 mm height, 0.30 mm FFC/FPC, gold-plated phosphor-bronze contacts, 0.5 A per contact, 50 V, -40 to +105 degC. Use the manufacturer land pattern; do not assume footprint compatibility with HCTL `C2906127` or Hirose `C224193` |
-| 1 | Universal FFC cable | Molex Premo-Flex `15018-0561` / `0150180561`; 60 circuits, 0.5 mm pitch, 76 mm long, Type A same-side contacts, 0.30 mm ends, gold plating, 0.5 A per conductor, 60 V AC, -40 to +105 degC. Confirm 76 mm length in the enclosure before release; use another Type-A 60-circuit Series 15018 length if required |
+| 2 | Universal FFC sockets | JUSHUO `AFC01-S60FCA-HF`, LCSC [`C49260536`](https://www.lcsc.com/product-detail/C49260536.html) |
+| 1 | Universal FFC cable | DEALON `FC-0.5B-60P-100mm`, LCSC [`C5242678`](https://www.lcsc.com/product-detail/C5242678.html) |
 | 1 | Battery | Keyed connector with verified polarity and current rating |
 | 1 | USB input PTC | At least 1.5 A hold after hot derating |
 | 1 | Battery fuse | Retain/resize after approved-pack fault-current review |
 | 1 | Debug | Tag-Connect or compact pogo pads; no fitted header |
+
+**Universal FFC socket:** 60 positions, 0.5 mm pitch, bottom contact,
+right-angle SMT, hinged lid, 2.0 mm height, and 0.30 mm cable thickness. Use the
+JUSHUO manufacturer land pattern. Do not assume footprint compatibility with
+the previous Molex `C493444`, HCTL `C2906127`, or Hirose `C224193`. A premium
+explicitly current-rated connector is unnecessary, but the assembled first
+article must pass the backlight-load checks.
+
+**Universal cable:** 60 circuits, 0.5 mm pitch, 100 mm long, 0.30 mm insertion
+thickness, and Type A/same-side contacts. Confirm 100 mm fits the enclosure. If
+it does not, substitute another generic cable with the same pin count, pitch,
+thickness, and contact orientation, and record its exact MPN.
 
 ## 6. Schematic wiring guide
 
@@ -459,9 +588,9 @@ Use the RGT 16-pin VQFN top-view footprint with exposed thermal pad.
 | 4 | `CE` | GND for charge enabled |
 | 5 | `EN2` | `BQ_EN2` from inverter pin 4; `MP_BQ_EN2` |
 | 6 | `EN1` | `TYPEC_OUT1`; `MP_BQ_EN1` |
-| 7 | `PGOOD` | DNP option: 10 kOhm pull-up to `VCC` and MCU/status destination; otherwise NC |
+| 7 | `PGOOD` | `PWR_GOOD_N`; 100 kOhm pull-up to `TYPEC_VDD`, green LED cathode path and status-red BSS138 gate; `MP_PWR_GOOD_N` |
 | 8 | `VSS` | Ground plane and direct local capacitor returns |
-| 9 | `CHG` | DNP option: LED plus discrete resistor to `VCC`, or 10 kOhm pull-up to an MCU input; otherwise NC |
+| 9 | `CHG` | `CHARGING_N`; blue LED cathode path and `MP_CHARGING_N`; no additional pull-up |
 | 10 | `OUT` | Join directly to pin 11 and `VSYS`; local 22 uF to GND |
 | 11 | `OUT` | Join directly to pin 10 and `VSYS` |
 | 12 | `ILIM` | Discrete 1.2 kOhm, 1%, to GND; short quiet route and `MP_BQ_ILIM` |
@@ -472,7 +601,10 @@ Use the RGT 16-pin VQFN top-view footprint with exposed thermal pad.
 | pad | thermal pad | Ground plane with TI paste window and thermal vias |
 
 Place `MP_BAT_PROTECTED` at the battery capacitor and `MP_VSYS` at the OUT
-capacitor. Do not join `BAT_PROTECTED` and `VSYS` anywhere outside the IC.
+capacitor. Also place `MP_PWR_GOOD_N` and `MP_CHARGING_N` beside the
+charger/status block. `PWR_GOOD_N` is already the red-inverter gate, so do not
+add a redundant gate pad under a second name. Do not join `BAT_PROTECTED` and
+`VSYS` anywhere outside the IC.
 
 ### 6.5 Battery connector, protection, ADC and TS variants
 
@@ -592,10 +724,10 @@ to `BOOST_5V`. Keep the branch name distinct so removing
 
 ### 6.11 TrackPoint level shifting
 
-Implement nine BSS138 channels total using five UMW `BSS138PS` packages (LCSC
-`C5271194`): three TrackPoint channels, five keyboard-LED sink channels and one
-Type-C MCU level-shift channel. Five dual packages provide ten channels; leave
-the unused channel unconnected at all signal terminals.
+Implement ten BSS138 channels total using five UMW `BSS138PS` packages (LCSC
+`C5271194`): three TrackPoint channels, five keyboard-LED sink channels, one
+Type-C MCU level-shift channel and one `PGOOD` red-status inverter. All channels
+in the five dual packages are assigned.
 
 For each TrackPoint RESET, CLOCK and DATA channel:
 
@@ -667,13 +799,12 @@ On the core connector, join parallel contacts at the pads:
 - pins 56, 57 and 59 -> `VCC`; and
 - all assigned ground contacts -> ground plane with local vias.
 
-The four parallel `BL_5V` contacts have a 2.0 A nominal aggregate connector
-and cable rating when the specified 0.5 A/contact Molex matched system is used. The observed
-approximately 620 mA backlight load is therefore about 155 mA per contact if
-current divides evenly. Merge the four contacts immediately into a common
-pour on both boards, provide at least four low-impedance ground contacts, and
-verify current sharing and temperature rise on the first article. Do not route
-the backlight through only one of the contacts.
+The four parallel `BL_5V` contacts divide the observed approximately 620 mA
+backlight load to about 155 mA per contact if current sharing is even. Merge
+the four contacts immediately into a common pour on both boards, provide at
+least four low-impedance ground contacts, and verify current sharing and
+temperature rise on the first article. Do not route the backlight through only
+one contact.
 
 On each adapter:
 
@@ -691,8 +822,8 @@ Do not duplicate the 50 mOhm current shunt on an adapter.
 
 Before layout, print a net cross-reference and confirm:
 
-1. `USB_VBUS_RAW` appears only after F1 and feeds BQ IN, Type-C supply diode,
-   HUSB320 VBUS_DET resistor and HolyIOT VBUS sense.
+1. `USB_VBUS_RAW` appears only after F1 and feeds BQ IN, the Type-C supply
+   diode, HUSB320 `VBUS_DET` directly, and the HolyIOT VBUS sense input.
 2. `VSYS` connects BQ OUT directly to both converter inputs and their required
    local capacitors; it does not directly feed a keyboard load.
 3. `SYS_EN` reaches both converter enable pins, its pulldown,
@@ -929,6 +1060,8 @@ T470 J37 is:
 | `MP_BQ_EN1`, `MP_BQ_EN2` | Charger mode pins | Verify actual input-limit selection |
 | `MP_BQ_ILIM` | ILIM pin/resistor node | Check soldering/value; high-impedance probing only |
 | `MP_BQ_IN` | Charger IN pin | Local input droop |
+| `MP_PWR_GOOD_N` | BQ24073 `PGOOD`, green cathode path and red-inverter gate | Verify valid-input indication and red inversion |
+| `MP_CHARGING_N` | BQ24073 `CHG` and blue cathode path | Verify charge, completion and 2 Hz fault indication |
 | `MP_BAT_PROTECTED` | Battery after protection | Pack/protection behavior |
 | `MP_VSYS` | BQ OUT | Charger system output |
 | `MP_SYS_EN` | Common converter-enable net | Maintained-switch and shutdown diagnosis |
@@ -950,17 +1083,17 @@ T470 J37 is:
 
 | Link | Default | Size | Open/remove when |
 | --- | --- | --- | --- |
-| `LK_VCC` | Fitted 0 Ohm | 0603/0805, current-qualified | Injecting external 3.3 V or isolating logic load |
-| `LK_5V_SOURCE` | Fitted 0 Ohm | 1206, current-qualified | Injecting external 5 V or isolating boost |
-| `LK_TRACKPOINT_5V` | Fitted 0 Ohm | 0805/1206 | Isolating a suspected TrackPoint/keyboard fault |
-| `LK_BL_ADAPTER` | Fitted 0 Ohm on adapter | 1206 | Isolating keyboard backlight/cable fault |
+| `LK_VCC` | Walsin `WR08X0000FTL`, `C163947` | 0805, 1.5 A | Injecting external 3.3 V or isolating logic load |
+| `LK_5V_SOURCE` | Walsin `WR12X0000FTL`, `C164015` | 1206, 2 A | Injecting external 5 V or isolating boost |
+| `LK_TRACKPOINT_5V` | Walsin `WR08X0000FTL`, `C163947` | 0805, 1.5 A | Isolating a suspected TrackPoint/keyboard fault |
+| `LK_BL_ADAPTER` | Walsin `WR12X0000FTL`, `C164015` | 1206, 2 A | Isolating keyboard backlight/cable fault |
 
 `SJ_SYS_EN_FORCE` is a normally open assembly/debug selector rather than an
 isolation link. Bridge it with solder only during bring-up when both converter
 data sheets confirm the selected enable-high source is safe.
-| `LK_BAT_ADC` | Fitted 0 Ohm | 0603 | Separating ADC divider leakage or a shorted ADC input |
-| `SJ_TS_FIXED` | Variant-dependent | 0603 0 Ohm/DNP | Select only fixed-TS build |
-| `SJ_TS_NTC` | Variant-dependent | 0603 0 Ohm/DNP | Select only external-NTC build |
+| `LK_BAT_ADC` | Walsin `WR06X0000FTL`, `C163836` | 0603, 1 A | Separating ADC divider leakage or a shorted ADC input |
+| `SJ_TS_FIXED` | Walsin `WR06X0000FTL`, `C163836`, or DNP | 0603 | Select only fixed-TS build |
+| `SJ_TS_NTC` | Walsin `WR06X0000FTL`, `C163836`, or DNP | 0603 | Select only external-NTC build |
 
 `SJ_TS_FIXED` and `SJ_TS_NTC` must never both be fitted. Use an assembly note
 and BOM variants; they are not user controls.
@@ -1072,7 +1205,9 @@ absolute minima for yield and tolerance margin.
 2. Verify F1 voltage drop and temperature at the maximum permitted input
    current.
 3. Validate BQ24073 charging, DPPM and battery supplement with a battery
-   emulator before attaching a real pack.
+   emulator before attaching a real pack. Verify status LED off, red, cyan,
+   green and 2 Hz fault-flash behavior against `MP_PWR_GOOD_N` and
+   `MP_CHARGING_N`.
 4. Validate `VCC_REG`, `VCC`, `BOOST_5V` and `+5V` unloaded and under electronic
    load. Exercise both injection procedures.
 5. Close only `LK_TRACKPOINT_5V`; attach a known-good TrackPoint keyboard and
@@ -1092,28 +1227,30 @@ absolute minima for yield and tolerance margin.
 
 ## 13. Release blockers
 
-- Complete schematic and ERC using this architecture.
-- Verify the `BSS138PS` symbol units and SOT-23-6 footprint pin assignment in
+- [ ] Complete the schematic and pass ERC using this architecture.
+- [ ] Verify the `BSS138PS` symbol units and SOT-23-6 footprint pin assignment in
   the completed schematic and PCB.
-- Qualify the USB-C receptacle and F1 current ratings.
-- Verify the Molex `5051106091` (`C493444`) manufacturer land pattern and
-  connector orientation on both boards; do not reuse the HCTL or Hirose
-  footprint without a dimensional comparison.
-- Confirm the Molex `15018-0561` 76 mm Type-A cable length, bend path and
-  retention-ear clearance in the final enclosure. If the length changes, use
-  only a 60-circuit, Type-A (same-side) Series 15018 variant and record its
-  exact MPN in the production BOM.
-- Verify 22 uF effective capacitance under bias and regulator stability.
-- Confirm JLCPCB can source `SGM2562XN6G/TR`, or retain the footprint-compatible
+- [ ] Qualify the USB-C receptacle and F1 current ratings.
+- [ ] Verify the JUSHUO `AFC01-S60FCA-HF` (`C49260536`) manufacturer land pattern,
+  hinged-lid clearance and connector orientation on both boards; do not reuse
+  a previous Molex, HCTL or Hirose footprint without a dimensional comparison.
+- [ ] Confirm the DEALON `FC-0.5B-60P-100mm` (`C5242678`) Type-A cable length, bend
+  path and lock clearance in the final enclosure. If the length changes, use
+  another generic 60-circuit, 0.5 mm-pitch, 0.30 mm-thick, Type-A (same-side)
+  cable and record its exact MPN in the production BOM.
+- [ ] Verify 22 uF effective capacitance under bias and regulator stability.
+- [ ] Confirm JLCPCB can source `SGM2562XN6G/TR`, or retain the footprint-compatible
   TI TPS22918 as the production fallback without changing the PCB.
-- Verify the HUSB320 BOM is exactly BA000 and that no 866 kOhm VBUS_DET
+- [ ] Verify the HUSB320 BOM is exactly BA000 and that no 866 kOhm VBUS_DET
   resistor from the BA001 reference circuit remains in the schematic.
-- Verify both converter EN absolute maximums, thresholds, shutdown currents
+- [ ] Verify the `C779813` manufacturer-specific pad numbering and orientation,
+  then approve red/cyan/green visibility and colour balance on a first article.
+- [ ] Verify both converter EN absolute maximums, thresholds, shutdown currents
   and back-power behavior before finalizing `SYS_EN` and its switch source.
-- Validate SGM2562 SS value, startup and backlight current limit.
-- Validate the approved battery, NTC option, charge/discharge current and
+- [ ] Validate SGM2562 SS value, startup and backlight current limit.
+- [ ] Validate the approved battery, NTC option, charge/discharge current and
   enclosure thermal behavior.
-- Confirm all array candidates are isolated, available and footprint-correct.
-- Recount fitted placements and BOM variants from the completed schematic.
-- Confirm every mandatory measurement pad, Kelvin pair, isolation link and
+- [ ] Confirm all array candidates are isolated, available and footprint-correct.
+- [ ] Recount fitted placements and BOM variants from the completed schematic.
+- [ ] Confirm every mandatory measurement pad, Kelvin pair, isolation link and
   injection pad remains physically accessible in the final assembly.
