@@ -66,19 +66,49 @@ The separate T470 J37 TrackPoint/backlight connector maps as follows:
 
 | J37 pin | Signal | Universal core pin | Universal daughter-board pad |
 | ---: | --- | ---: | ---: |
-| 1 | `TP4_DATA` | 37 | 24 |
-| 2 | `+5V` | 42 | 19 |
-| 3 | GND | 44 | 17 |
-| 4 | `TP4_RESET` | 41 | 20 |
-| 5 | `TP4MIDDLE` | 32 | 29 |
-| 6 | `TP4RIGHT` | 31 | 30 |
-| 7 | `TP4LEFT` | 30 | 31 |
-| 8 | `+5V` | 43 | 18 |
-| 9 | `TP4_CLOCK` | 39 | 22 |
-| 10 | `BL_5V` | 51 | 10 |
-| 11 | `KBD_BL_PWM` | 50 | 11 |
-| 12 | `-KBD_BL_DTCT` | 35 | 26 |
+| 1 | `VCC_TP` | 42-43 (`+5V`) | 19-18 |
+| 2 | `TP4_DATA` | 37 | 24 |
+| 3 | `TP4_RESET` | 41 | 20 |
+| 4 | `TP4MIDDLE` | 32 | 29 |
+| 5 | `TP4RIGHT` | 31 | 30 |
+| 6 | `TP4LEFT` | 30 | 31 |
+| 7 | GND | GND plane | GND plane |
+| 8 | `TP4_CLOCK` | 39 | 22 |
+| 9 | `VCC5B` | 51-54 (`BL_5V`) | 10-7 |
+| 10 | `KBD_BL_PWM` | 50 | 11 |
+| 11 | `-KBD_BL_DTCT` | 35 | 26 |
+| 12 | GND | GND plane | GND plane |
 | 13-14 | Ground tabs | GND plane | GND plane |
+
+This numbering is traced directly from the Lenovo J37 schematic. Revision B
+uses a 14-contact, 1 mm-pitch connector because the original 12-contact part is
+difficult to source. Center the 12-contact cable in the wider connector so
+that one electrical contact remains unused at each end:
+
+| 14-contact adapter connector | Lenovo J37 contact | Signal |
+| ---: | ---: | --- |
+| 1 | - | NC |
+| 2 | 1 | `VCC_TP` |
+| 3 | 2 | `TP4_DATA` |
+| 4 | 3 | `TP4_RESET` |
+| 5 | 4 | `TP4MIDDLE` |
+| 6 | 5 | `TP4RIGHT` |
+| 7 | 6 | `TP4LEFT` |
+| 8 | 7 | GND |
+| 9 | 8 | `TP4_CLOCK` |
+| 10 | 9 | `VCC5B` |
+| 11 | 10 | `KBD_BL_PWM` |
+| 12 | 11 | `-KBD_BL_DTCT` |
+| 13 | 12 | GND |
+| 14 | - | NC |
+| 15-16 | J37 shield tabs 13-14 | GND plane |
+
+For electrical contacts 2-13, the adapter contact number is the J37 contact
+number plus one. The 12-contact cable is not keyed against lateral movement in
+the wider connector, so the mechanical design must keep it centered. Confirm
+the physical top-/bottom-contact orientation and cable alignment by continuity
+testing J37 ground contacts 7 and 12 to adapter contacts 8 and 13 respectively
+before applying power. Keep `VCC_TP` and `VCC5B` as separate nets.
 
 The five LED outputs are distinct core-board sink channels. Do not merge
 T430 `-LEDPWR` with T470 `-LED_FNLOCK`. The T470 keyboard FFC maps its four
